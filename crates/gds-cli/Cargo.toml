@@ -19,7 +19,7 @@ name = "gds-cli-generate"
 path = "src/bin/generate_assets.rs"
 
 [dependencies]
-gds-core = { path = "../gds-core" }
+gds-core = { path = "../gds-core", features = ["keyring"] }
 anyhow = "1.0"
 clap = { version = "4", features = ["derive"] }
 clap_complete = "4"
@@ -34,6 +34,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 zbus = { version = "5", features = ["tokio"] }
 chrono = "0.4"
 libc = "0.2"
+toml = "0.9"
 
 [dev-dependencies]
 gds-daemon = { path = "../gds-daemon" }
