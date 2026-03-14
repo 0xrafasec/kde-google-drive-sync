@@ -114,6 +114,9 @@ mod tests {
         let json = serde_json::to_string(&c).unwrap();
         let c2: Config = serde_json::from_str(&json).unwrap();
         assert_eq!(c.oauth.redirect_port, c2.oauth.redirect_port);
-        assert_eq!(c.sync.conflict_suffix_format, c2.sync.conflict_suffix_format);
+        assert_eq!(
+            c.sync.conflict_suffix_format,
+            c2.sync.conflict_suffix_format
+        );
     }
 }
