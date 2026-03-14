@@ -69,7 +69,9 @@ mod tests {
 
     #[test]
     fn quota_exceeded_retryable() {
-        assert!(is_retryable_error(&SyncError::QuotaExceeded { retry_after: 60 }));
+        assert!(is_retryable_error(&SyncError::QuotaExceeded {
+            retry_after: 60
+        }));
     }
 
     #[test]
