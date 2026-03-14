@@ -2,8 +2,11 @@
 
 **A native KDE Plasma client for Google Drive** — bidirectional sync with system tray, Dolphin integration, and KDE notifications. Built in Rust for safety, speed, and seamless desktop integration.
 
+[![WIP](https://img.shields.io/badge/status-WIP-yellow.svg)](TODO.md)
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+> **Disclaimer:** This project is **work in progress**. It is not production-ready. APIs, behaviour, and packaging may change. Use at your own risk. See [TODO.md](TODO.md) for the roadmap and current status.
 
 ---
 
@@ -24,7 +27,7 @@
 
 ## Status
 
-**Early development.** The core domain model and project layout are in place. Sync engine, daemon, CLI, and KDE UI are in progress. See [TODO.md](TODO.md) for the full roadmap.
+**Work in progress.** The core domain model and project layout are in place. Sync engine, daemon, CLI, and KDE UI are in progress. The project is not ready for production use. See [TODO.md](TODO.md) for the full roadmap.
 
 ---
 
