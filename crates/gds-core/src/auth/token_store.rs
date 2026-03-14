@@ -2,7 +2,11 @@
 
 use crate::model::SyncError;
 
-/// Storage for OAuth refresh tokens. Implementations must never persist tokens in plain files.
+/// Well-known key for the single OAuth client secret (stored in keyring, not in config).
+pub const OAUTH_CLIENT_SECRET_KEY: &str = "oauth:client_secret";
+
+/// Storage for OAuth refresh tokens and optional OAuth client secret.
+/// Implementations must never persist secrets in plain files.
 pub trait TokenStore: Send + Sync {
     /// Store the refresh token for the given key (e.g. account id).
     fn store_refresh_token(&self, key: &str, token: &str) -> Result<(), SyncError>;
@@ -12,6 +16,16 @@ pub trait TokenStore: Send + Sync {
 
     /// Remove the refresh token (e.g. on account removal or revocation).
     fn delete_refresh_token(&self, key: &str) -> Result<(), SyncError>;
+
+    /// Load the OAuth client secret (from keyring). Used when no credentials_path is set.
+    fn get_oauth_client_secret(&self) -> Result<Option<String>, SyncError> {
+        self.get_refresh_token(OAUTH_CLIENT_SECRET_KEY)
+    }
+
+    /// Store the OAuth client secret (in keyring). Input must not be logged.
+    fn set_oauth_client_secret(&self, secret: &str) -> Result<(), SyncError> {
+        self.store_refresh_token(OAUTH_CLIENT_SECRET_KEY, secret)
+    }
 }
 
 /// In-memory token store for tests only. SECURITY: never use in production.
