@@ -2,6 +2,7 @@
 
 mod account;
 mod file_state;
+mod oauth_app_credentials;
 mod sync_error;
 mod sync_folder;
 
@@ -13,6 +14,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool};
 
 pub use account::AccountRepository;
 pub use file_state::FileStateRepository;
+pub use oauth_app_credentials::{get as get_oauth_app_credentials, upsert as upsert_oauth_app_credentials};
 pub use sync_error::{SyncErrorRecord, SyncErrorRepository};
 pub use sync_folder::SyncFolderRepository;
 
