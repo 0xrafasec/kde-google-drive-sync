@@ -11,14 +11,14 @@ use crate::api::{export_mime_type, is_google_workspace_file};
 use crate::api::{CreateFileMetadata, DriveClient, SIMPLE_UPLOAD_MAX_BYTES};
 use crate::auth::TokenProvider;
 use crate::db::FileStateRepository;
+use crate::model::SyncError;
 use crate::model::{Config, DriveFile, FileState, SyncFolder, SyncState};
 use crate::sync::change::SyncActionKind;
+use crate::sync::diff::parse_drive_modified;
 use crate::sync::fs::LocalFs;
 use crate::sync::path::conflict_copy_path;
 use crate::sync::queue::SyncQueue;
 use crate::sync::workspace_stub::stub_content_for_mime;
-use crate::sync::diff::parse_drive_modified;
-use crate::model::SyncError;
 
 /// Executes sync actions from a queue. Checks pause flag between operations.
 #[allow(dead_code)]
@@ -91,8 +91,13 @@ impl SyncExecutor {
 
         match &action.kind {
             SyncActionKind::NewUpload => {
-                let content = self.local_fs.read_file(sync_root, &action.relative_path).await?;
-                let mime = mime_guess::from_path(&action.relative_path).first_or_octet_stream().to_string();
+                let content = self
+                    .local_fs
+                    .read_file(sync_root, &action.relative_path)
+                    .await?;
+                let mime = mime_guess::from_path(&action.relative_path)
+                    .first_or_octet_stream()
+                    .to_string();
                 let meta = CreateFileMetadata {
                     name: Some(action.relative_path.clone()),
                     mime_type: Some(mime.clone()),
@@ -105,23 +110,46 @@ impl SyncExecutor {
                 } else {
                     let mut cursor = std::io::Cursor::new(&content);
                     self.drive_client
-                        .files_create_resumable(&token, &meta, content.len() as u64, &mime, &mut cursor, None)
+                        .files_create_resumable(
+                            &token,
+                            &meta,
+                            content.len() as u64,
+                            &mime,
+                            &mut cursor,
+                            None,
+                        )
                         .await?
                 };
-                let state = file_state_after_upload(sync_folder_id, &action.relative_path, &file, action.local_md5.as_deref(), action.local_modified);
-                FileStateRepository::upsert(&self.pool, &state).await.map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
+                let state = file_state_after_upload(
+                    sync_folder_id,
+                    &action.relative_path,
+                    &file,
+                    action.local_md5.as_deref(),
+                    action.local_modified,
+                );
+                FileStateRepository::upsert(&self.pool, &state)
+                    .await
+                    .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
             }
             SyncActionKind::UpdateUpload => {
                 let state = action.state.as_ref().ok_or_else(|| SyncError::ApiError {
                     code: 0,
                     message: "UpdateUpload missing state".to_string(),
                 })?;
-                let content = self.local_fs.read_file(sync_root, &action.relative_path).await?;
-                let mime = mime_guess::from_path(&action.relative_path).first_or_octet_stream().to_string();
-                let file_id = state.drive_file_id.as_ref().ok_or_else(|| SyncError::ApiError {
-                    code: 0,
-                    message: "UpdateUpload missing drive_file_id".to_string(),
-                })?;
+                let content = self
+                    .local_fs
+                    .read_file(sync_root, &action.relative_path)
+                    .await?;
+                let mime = mime_guess::from_path(&action.relative_path)
+                    .first_or_octet_stream()
+                    .to_string();
+                let file_id = state
+                    .drive_file_id
+                    .as_ref()
+                    .ok_or_else(|| SyncError::ApiError {
+                        code: 0,
+                        message: "UpdateUpload missing drive_file_id".to_string(),
+                    })?;
                 let file = if content.len() as u64 <= SIMPLE_UPLOAD_MAX_BYTES {
                     self.drive_client
                         .files_update_content_simple(&token, file_id, &content, &mime)
@@ -129,17 +157,36 @@ impl SyncExecutor {
                 } else {
                     let mut cursor = std::io::Cursor::new(&content);
                     self.drive_client
-                        .files_update_content_resumable(&token, file_id, content.len() as u64, &mime, 0, &mut cursor, None)
+                        .files_update_content_resumable(
+                            &token,
+                            file_id,
+                            content.len() as u64,
+                            &mime,
+                            0,
+                            &mut cursor,
+                            None,
+                        )
                         .await?
                 };
-                let new_state = file_state_after_upload(sync_folder_id, &action.relative_path, &file, action.local_md5.as_deref(), action.local_modified);
-                FileStateRepository::upsert(&self.pool, &new_state).await.map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
+                let new_state = file_state_after_upload(
+                    sync_folder_id,
+                    &action.relative_path,
+                    &file,
+                    action.local_md5.as_deref(),
+                    action.local_modified,
+                );
+                FileStateRepository::upsert(&self.pool, &new_state)
+                    .await
+                    .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
             }
             SyncActionKind::NewDownload | SyncActionKind::UpdateDownload => {
-                let drive_file = action.drive_file.as_ref().ok_or_else(|| SyncError::ApiError {
-                    code: 0,
-                    message: "Download action missing drive_file".to_string(),
-                })?;
+                let drive_file = action
+                    .drive_file
+                    .as_ref()
+                    .ok_or_else(|| SyncError::ApiError {
+                        code: 0,
+                        message: "Download action missing drive_file".to_string(),
+                    })?;
                 let content = if is_google_workspace_file(&drive_file.mime_type) {
                     stub_content_for_mime(&drive_file.id, &drive_file.mime_type)
                         .unwrap_or_default()
@@ -160,22 +207,39 @@ impl SyncExecutor {
                 self.local_fs
                     .write_atomic(sync_root, &action.relative_path, &content)
                     .await?;
-                let state = file_state_after_download(sync_folder_id, &action.relative_path, drive_file, action.state.as_ref());
-                FileStateRepository::upsert(&self.pool, &state).await.map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
+                let state = file_state_after_download(
+                    sync_folder_id,
+                    &action.relative_path,
+                    drive_file,
+                    action.state.as_ref(),
+                );
+                FileStateRepository::upsert(&self.pool, &state)
+                    .await
+                    .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
             }
             SyncActionKind::Conflict => {
                 let state = action.state.as_ref().ok_or_else(|| SyncError::ApiError {
                     code: 0,
                     message: "Conflict action missing state".to_string(),
                 })?;
-                let drive_file = action.drive_file.as_ref().ok_or_else(|| SyncError::ApiError {
-                    code: 0,
-                    message: "Conflict action missing drive_file".to_string(),
-                })?;
-                let local_content = self.local_fs.read_file(sync_root, &action.relative_path).await?;
+                let drive_file = action
+                    .drive_file
+                    .as_ref()
+                    .ok_or_else(|| SyncError::ApiError {
+                        code: 0,
+                        message: "Conflict action missing drive_file".to_string(),
+                    })?;
+                let local_content = self
+                    .local_fs
+                    .read_file(sync_root, &action.relative_path)
+                    .await?;
                 let full_path = sync_root.join(&action.relative_path);
-                let conflict_path = conflict_copy_path(&full_path, Utc::now(), |p: &Path| p.exists());
-                let conflict_rel = conflict_path.strip_prefix(sync_root).map(|p| p.to_string_lossy().to_string()).unwrap_or_else(|_| conflict_path.display().to_string());
+                let conflict_path =
+                    conflict_copy_path(&full_path, Utc::now(), |p: &Path| p.exists());
+                let conflict_rel = conflict_path
+                    .strip_prefix(sync_root)
+                    .map(|p| p.to_string_lossy().to_string())
+                    .unwrap_or_else(|_| conflict_path.display().to_string());
                 self.local_fs
                     .write_atomic(sync_root, &conflict_rel, &local_content)
                     .await?;
@@ -199,9 +263,16 @@ impl SyncExecutor {
                 self.local_fs
                     .write_atomic(sync_root, &action.relative_path, &server_content)
                     .await?;
-                let mut new_state = file_state_after_download(sync_folder_id, &action.relative_path, drive_file, Some(state));
+                let mut new_state = file_state_after_download(
+                    sync_folder_id,
+                    &action.relative_path,
+                    drive_file,
+                    Some(state),
+                );
                 new_state.sync_state = SyncState::conflict();
-                FileStateRepository::upsert(&self.pool, &new_state).await.map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
+                FileStateRepository::upsert(&self.pool, &new_state)
+                    .await
+                    .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
                 let _ = conflict_rel;
             }
             SyncActionKind::DeleteRemote => {
@@ -209,20 +280,29 @@ impl SyncExecutor {
                     code: 0,
                     message: "DeleteRemote missing state".to_string(),
                 })?;
-                let file_id = state.drive_file_id.as_ref().ok_or_else(|| SyncError::ApiError {
-                    code: 0,
-                    message: "DeleteRemote missing drive_file_id".to_string(),
-                })?;
+                let file_id = state
+                    .drive_file_id
+                    .as_ref()
+                    .ok_or_else(|| SyncError::ApiError {
+                        code: 0,
+                        message: "DeleteRemote missing drive_file_id".to_string(),
+                    })?;
                 self.drive_client.files_delete(&token, file_id).await?;
-                FileStateRepository::delete(&self.pool, &state.id).await.map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
+                FileStateRepository::delete(&self.pool, &state.id)
+                    .await
+                    .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
             }
             SyncActionKind::DeleteLocal => {
                 let state = action.state.as_ref().ok_or_else(|| SyncError::ApiError {
                     code: 0,
                     message: "DeleteLocal missing state".to_string(),
                 })?;
-                self.local_fs.remove_file(sync_root, &action.relative_path).await?;
-                FileStateRepository::delete(&self.pool, &state.id).await.map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
+                self.local_fs
+                    .remove_file(sync_root, &action.relative_path)
+                    .await?;
+                FileStateRepository::delete(&self.pool, &state.id)
+                    .await
+                    .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
             }
         }
         Ok(())
@@ -258,7 +338,9 @@ fn file_state_after_download(
     existing: Option<&FileState>,
 ) -> FileState {
     let now = Utc::now();
-    let id = existing.map(|s| s.id.clone()).unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+    let id = existing
+        .map(|s| s.id.clone())
+        .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
     FileState {
         id,
         sync_folder_id: sync_folder_id.to_string(),
