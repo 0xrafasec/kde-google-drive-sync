@@ -41,7 +41,9 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), sqlx::migrate::Migr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::{AccountRepository, FileStateRepository, SyncErrorRepository, SyncFolderRepository};
+    use crate::db::{
+        AccountRepository, FileStateRepository, SyncErrorRepository, SyncFolderRepository,
+    };
     use crate::model::{Account, FileState, SyncFolder, SyncState};
     use chrono::Utc;
 
@@ -62,13 +64,19 @@ mod tests {
             created_at: Utc::now(),
         };
         AccountRepository::insert(&pool, &account).await.unwrap();
-        let got = AccountRepository::get_by_id(&pool, "acc-1").await.unwrap().unwrap();
+        let got = AccountRepository::get_by_id(&pool, "acc-1")
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(got.id, account.id);
         assert_eq!(got.email, account.email);
         let list = AccountRepository::list_all(&pool).await.unwrap();
         assert_eq!(list.len(), 1);
         AccountRepository::delete(&pool, "acc-1").await.unwrap();
-        assert!(AccountRepository::get_by_id(&pool, "acc-1").await.unwrap().is_none());
+        assert!(AccountRepository::get_by_id(&pool, "acc-1")
+            .await
+            .unwrap()
+            .is_none());
     }
 
     #[tokio::test]
@@ -94,12 +102,27 @@ mod tests {
         SyncFolderRepository::insert(&pool, &folder).await.unwrap();
         let state = FileState::new_pending("fs-1".into(), "sf-1".into(), "a/b".into());
         FileStateRepository::upsert(&pool, &state).await.unwrap();
-        SyncErrorRepository::insert(&pool, "err-1", Some("fs-1"), "msg", Utc::now(), 0).await.unwrap();
-        AccountRepository::delete_cascade(&pool, "acc-1").await.unwrap();
-        assert!(AccountRepository::get_by_id(&pool, "acc-1").await.unwrap().is_none());
-        assert!(SyncFolderRepository::get_by_id(&pool, "sf-1").await.unwrap().is_none());
-        assert!(FileStateRepository::get_by_path(&pool, "sf-1", "a/b").await.unwrap().is_none());
-        let errs = SyncErrorRepository::get_recent(&pool, None, 10).await.unwrap();
+        SyncErrorRepository::insert(&pool, "err-1", Some("fs-1"), "msg", Utc::now(), 0)
+            .await
+            .unwrap();
+        AccountRepository::delete_cascade(&pool, "acc-1")
+            .await
+            .unwrap();
+        assert!(AccountRepository::get_by_id(&pool, "acc-1")
+            .await
+            .unwrap()
+            .is_none());
+        assert!(SyncFolderRepository::get_by_id(&pool, "sf-1")
+            .await
+            .unwrap()
+            .is_none());
+        assert!(FileStateRepository::get_by_path(&pool, "sf-1", "a/b")
+            .await
+            .unwrap()
+            .is_none());
+        let errs = SyncErrorRepository::get_recent(&pool, None, 10)
+            .await
+            .unwrap();
         assert!(errs.is_empty());
     }
 
@@ -124,18 +147,36 @@ mod tests {
             paused: false,
         };
         SyncFolderRepository::insert(&pool, &folder).await.unwrap();
-        let got = SyncFolderRepository::get_by_id(&pool, "sf-1").await.unwrap().unwrap();
+        let got = SyncFolderRepository::get_by_id(&pool, "sf-1")
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(got.local_path, "/tmp/d");
-        let list = SyncFolderRepository::list_by_account(&pool, "acc-1").await.unwrap();
+        let list = SyncFolderRepository::list_by_account(&pool, "acc-1")
+            .await
+            .unwrap();
         assert_eq!(list.len(), 1);
-        SyncFolderRepository::set_paused(&pool, "sf-1", true).await.unwrap();
-        let got2 = SyncFolderRepository::get_by_id(&pool, "sf-1").await.unwrap().unwrap();
+        SyncFolderRepository::set_paused(&pool, "sf-1", true)
+            .await
+            .unwrap();
+        let got2 = SyncFolderRepository::get_by_id(&pool, "sf-1")
+            .await
+            .unwrap()
+            .unwrap();
         assert!(got2.paused);
-        SyncFolderRepository::update_page_token(&pool, "sf-1", Some("token123")).await.unwrap();
-        let got3 = SyncFolderRepository::get_by_id(&pool, "sf-1").await.unwrap().unwrap();
+        SyncFolderRepository::update_page_token(&pool, "sf-1", Some("token123"))
+            .await
+            .unwrap();
+        let got3 = SyncFolderRepository::get_by_id(&pool, "sf-1")
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(got3.start_page_token.as_deref(), Some("token123"));
         SyncFolderRepository::delete(&pool, "sf-1").await.unwrap();
-        assert!(SyncFolderRepository::get_by_id(&pool, "sf-1").await.unwrap().is_none());
+        assert!(SyncFolderRepository::get_by_id(&pool, "sf-1")
+            .await
+            .unwrap()
+            .is_none());
     }
 
     #[tokio::test]
@@ -162,31 +203,51 @@ mod tests {
 
         let state = FileState::new_pending("id1".into(), "sf-1".into(), "p/file.txt".into());
         FileStateRepository::upsert(&pool, &state).await.unwrap();
-        let got = FileStateRepository::get_by_path(&pool, "sf-1", "p/file.txt").await.unwrap().unwrap();
+        let got = FileStateRepository::get_by_path(&pool, "sf-1", "p/file.txt")
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(got.id, "id1");
         assert_eq!(got.relative_path, "p/file.txt");
 
-        let list = FileStateRepository::list_by_folder(&pool, "sf-1").await.unwrap();
+        let list = FileStateRepository::list_by_folder(&pool, "sf-1")
+            .await
+            .unwrap();
         assert_eq!(list.len(), 1);
 
         let mut state2 = state.clone();
         state2.sync_state = SyncState::synced();
         state2.id = "id1".to_string();
         FileStateRepository::upsert(&pool, &state2).await.unwrap();
-        let list_pending = FileStateRepository::list_by_state(&pool, "sf-1", crate::model::SyncStateKind::Pending).await.unwrap();
-        let list_synced = FileStateRepository::list_by_state(&pool, "sf-1", crate::model::SyncStateKind::Synced).await.unwrap();
+        let list_pending =
+            FileStateRepository::list_by_state(&pool, "sf-1", crate::model::SyncStateKind::Pending)
+                .await
+                .unwrap();
+        let list_synced =
+            FileStateRepository::list_by_state(&pool, "sf-1", crate::model::SyncStateKind::Synced)
+                .await
+                .unwrap();
         assert!(list_pending.is_empty());
         assert_eq!(list_synced.len(), 1);
 
         FileStateRepository::delete(&pool, "id1").await.unwrap();
-        assert!(FileStateRepository::get_by_path(&pool, "sf-1", "p/file.txt").await.unwrap().is_none());
+        assert!(
+            FileStateRepository::get_by_path(&pool, "sf-1", "p/file.txt")
+                .await
+                .unwrap()
+                .is_none()
+        );
 
         let bulk = vec![
             FileState::new_pending("b1".into(), "sf-1".into(), "x/1".into()),
             FileState::new_pending("b2".into(), "sf-1".into(), "x/2".into()),
         ];
-        FileStateRepository::bulk_upsert(&pool, &bulk).await.unwrap();
-        let list_after = FileStateRepository::list_by_folder(&pool, "sf-1").await.unwrap();
+        FileStateRepository::bulk_upsert(&pool, &bulk)
+            .await
+            .unwrap();
+        let list_after = FileStateRepository::list_by_folder(&pool, "sf-1")
+            .await
+            .unwrap();
         assert_eq!(list_after.len(), 2);
     }
 
@@ -194,38 +255,69 @@ mod tests {
     async fn test_sync_error_insert_get_recent_clear_for_file_increment_retry() {
         let pool = test_pool().await;
         // Create account and folder and file_state so sync_errors can reference fs-1
-        AccountRepository::insert(&pool, &Account {
-            id: "acc-1".to_string(),
-            email: "u@example.com".to_string(),
-            display_name: None,
-            keyring_key: "k".to_string(),
-            created_at: Utc::now(),
-        }).await.unwrap();
-        SyncFolderRepository::insert(&pool, &SyncFolder {
-            id: "sf-1".to_string(),
-            account_id: "acc-1".to_string(),
-            local_path: "/tmp/d".to_string(),
-            drive_folder_id: "df".to_string(),
-            start_page_token: None,
-            last_sync_at: None,
-            paused: false,
-        }).await.unwrap();
-        FileStateRepository::upsert(&pool, &FileState::new_pending("fs-1".into(), "sf-1".into(), "a".into())).await.unwrap();
+        AccountRepository::insert(
+            &pool,
+            &Account {
+                id: "acc-1".to_string(),
+                email: "u@example.com".to_string(),
+                display_name: None,
+                keyring_key: "k".to_string(),
+                created_at: Utc::now(),
+            },
+        )
+        .await
+        .unwrap();
+        SyncFolderRepository::insert(
+            &pool,
+            &SyncFolder {
+                id: "sf-1".to_string(),
+                account_id: "acc-1".to_string(),
+                local_path: "/tmp/d".to_string(),
+                drive_folder_id: "df".to_string(),
+                start_page_token: None,
+                last_sync_at: None,
+                paused: false,
+            },
+        )
+        .await
+        .unwrap();
+        FileStateRepository::upsert(
+            &pool,
+            &FileState::new_pending("fs-1".into(), "sf-1".into(), "a".into()),
+        )
+        .await
+        .unwrap();
 
-        SyncErrorRepository::insert(&pool, "e1", None, "error one", Utc::now(), 0).await.unwrap();
-        SyncErrorRepository::insert(&pool, "e2", Some("fs-1"), "error two", Utc::now(), 1).await.unwrap();
-        let recent = SyncErrorRepository::get_recent(&pool, None, 10).await.unwrap();
+        SyncErrorRepository::insert(&pool, "e1", None, "error one", Utc::now(), 0)
+            .await
+            .unwrap();
+        SyncErrorRepository::insert(&pool, "e2", Some("fs-1"), "error two", Utc::now(), 1)
+            .await
+            .unwrap();
+        let recent = SyncErrorRepository::get_recent(&pool, None, 10)
+            .await
+            .unwrap();
         assert_eq!(recent.len(), 2);
-        let for_file = SyncErrorRepository::get_recent(&pool, Some("fs-1"), 10).await.unwrap();
+        let for_file = SyncErrorRepository::get_recent(&pool, Some("fs-1"), 10)
+            .await
+            .unwrap();
         assert_eq!(for_file.len(), 1);
         assert_eq!(for_file[0].retry_count, 1);
 
-        SyncErrorRepository::increment_retry(&pool, "e2").await.unwrap();
-        let again = SyncErrorRepository::get_recent(&pool, Some("fs-1"), 10).await.unwrap();
+        SyncErrorRepository::increment_retry(&pool, "e2")
+            .await
+            .unwrap();
+        let again = SyncErrorRepository::get_recent(&pool, Some("fs-1"), 10)
+            .await
+            .unwrap();
         assert_eq!(again[0].retry_count, 2);
 
-        SyncErrorRepository::clear_for_file(&pool, "fs-1").await.unwrap();
-        let after_clear = SyncErrorRepository::get_recent(&pool, Some("fs-1"), 10).await.unwrap();
+        SyncErrorRepository::clear_for_file(&pool, "fs-1")
+            .await
+            .unwrap();
+        let after_clear = SyncErrorRepository::get_recent(&pool, Some("fs-1"), 10)
+            .await
+            .unwrap();
         assert!(after_clear.is_empty());
     }
 }
