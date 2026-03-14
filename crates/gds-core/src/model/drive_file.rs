@@ -56,7 +56,10 @@ mod tests {
     fn drive_file_size_bytes() {
         let f = sample_file();
         assert_eq!(f.size_bytes(), Some(1024));
-        let f2 = DriveFile { size: Some("invalid".to_string()), ..sample_file() };
+        let f2 = DriveFile {
+            size: Some("invalid".to_string()),
+            ..sample_file()
+        };
         assert_eq!(f2.size_bytes(), None);
     }
 
@@ -64,7 +67,10 @@ mod tests {
     fn drive_file_is_trashed() {
         let f = sample_file();
         assert!(!f.is_trashed());
-        let f2 = DriveFile { trashed: Some(true), ..sample_file() };
+        let f2 = DriveFile {
+            trashed: Some(true),
+            ..sample_file()
+        };
         assert!(f2.is_trashed());
     }
 
