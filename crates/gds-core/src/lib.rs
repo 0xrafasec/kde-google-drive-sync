@@ -3,4 +3,5 @@
 //! Pure sync logic, domain model, and abstractions. No OS-specific I/O;
 //! everything injectable via traits for testing.
 
+pub mod db;
 pub mod model;
