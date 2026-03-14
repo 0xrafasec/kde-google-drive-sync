@@ -34,12 +34,10 @@ pub fn safe_local_path(sync_root: &Path, relative: &str) -> Result<PathBuf, Sync
 
     let candidate = sync_root.join(&sanitized);
 
-    let sync_root_canon = sync_root
-        .canonicalize()
-        .map_err(|e| SyncError::IoError {
-            path: sync_root.display().to_string(),
-            source: e,
-        })?;
+    let sync_root_canon = sync_root.canonicalize().map_err(|e| SyncError::IoError {
+        path: sync_root.display().to_string(),
+        source: e,
+    })?;
 
     if candidate.exists() {
         let canonical = candidate.canonicalize().map_err(|e| SyncError::IoError {
