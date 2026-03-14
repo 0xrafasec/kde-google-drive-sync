@@ -38,13 +38,15 @@ impl AccountRepository {
         .fetch_optional(pool)
         .await?;
 
-        Ok(row.map(|(id, email, display_name, keyring_key, created_at)| Account {
-            id,
-            email,
-            display_name,
-            keyring_key,
-            created_at: DateTime::from_timestamp_secs(created_at).unwrap_or_else(Utc::now),
-        }))
+        Ok(row.map(
+            |(id, email, display_name, keyring_key, created_at)| Account {
+                id,
+                email,
+                display_name,
+                keyring_key,
+                created_at: DateTime::from_timestamp_secs(created_at).unwrap_or_else(Utc::now),
+            },
+        ))
     }
 
     /// List all accounts.
@@ -57,13 +59,15 @@ impl AccountRepository {
 
         Ok(rows
             .into_iter()
-            .map(|(id, email, display_name, keyring_key, created_at)| Account {
-                id,
-                email,
-                display_name,
-                keyring_key,
-                created_at: DateTime::from_timestamp_secs(created_at).unwrap_or_else(Utc::now),
-            })
+            .map(
+                |(id, email, display_name, keyring_key, created_at)| Account {
+                    id,
+                    email,
+                    display_name,
+                    keyring_key,
+                    created_at: DateTime::from_timestamp_secs(created_at).unwrap_or_else(Utc::now),
+                },
+            )
             .collect())
     }
 
@@ -80,10 +84,11 @@ impl AccountRepository {
     pub async fn delete_cascade(pool: &SqlitePool, id: &str) -> Result<(), sqlx::Error> {
         let mut tx = pool.begin().await?;
         // Get sync folder ids for this account
-        let folder_ids: Vec<String> = sqlx::query_scalar("SELECT id FROM sync_folders WHERE account_id = ?")
-            .bind(id)
-            .fetch_all(&mut *tx)
-            .await?;
+        let folder_ids: Vec<String> =
+            sqlx::query_scalar("SELECT id FROM sync_folders WHERE account_id = ?")
+                .bind(id)
+                .fetch_all(&mut *tx)
+                .await?;
         for folder_id in &folder_ids {
             sqlx::query("DELETE FROM sync_errors WHERE file_state_id IN (SELECT id FROM file_states WHERE sync_folder_id = ?)")
                 .bind(folder_id)
