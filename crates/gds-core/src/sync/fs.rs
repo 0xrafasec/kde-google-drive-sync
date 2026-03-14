@@ -30,7 +30,11 @@ pub struct DirEntry {
 pub trait LocalFs: Send + Sync {
     /// Lists direct children of the given path (relative to sync root).
     /// Symlinks that point outside sync root should be skipped (SECURITY).
-    async fn list_dir(&self, sync_root: &Path, relative_path: &str) -> Result<Vec<DirEntry>, SyncError>;
+    async fn list_dir(
+        &self,
+        sync_root: &Path,
+        relative_path: &str,
+    ) -> Result<Vec<DirEntry>, SyncError>;
 
     /// Returns file metadata (md5, mtime). Returns None if not found or not a file.
     async fn file_metadata(
@@ -40,11 +44,7 @@ pub trait LocalFs: Send + Sync {
     ) -> Result<Option<LocalFileMeta>, SyncError>;
 
     /// Reads full file content. Use only for small files or streaming elsewhere.
-    async fn read_file(
-        &self,
-        sync_root: &Path,
-        relative_path: &str,
-    ) -> Result<Vec<u8>, SyncError>;
+    async fn read_file(&self, sync_root: &Path, relative_path: &str) -> Result<Vec<u8>, SyncError>;
 
     /// Writes content atomically (temp file + rename). Used for downloads.
     async fn write_atomic(
@@ -67,7 +67,11 @@ pub trait LocalFs: Send + Sync {
     async fn exists(&self, sync_root: &Path, relative_path: &str) -> Result<bool, SyncError>;
 
     /// Returns true if path is a symlink that points outside sync_root (skip during scan).
-    async fn is_external_symlink(&self, sync_root: &Path, full_path: &Path) -> Result<bool, SyncError>;
+    async fn is_external_symlink(
+        &self,
+        sync_root: &Path,
+        full_path: &Path,
+    ) -> Result<bool, SyncError>;
 }
 
 /// Real implementation using tokio::fs. Respects symlink policy.
@@ -75,27 +79,35 @@ pub struct TokioLocalFs;
 
 #[async_trait::async_trait]
 impl LocalFs for TokioLocalFs {
-    async fn list_dir(&self, sync_root: &Path, relative_path: &str) -> Result<Vec<DirEntry>, SyncError> {
+    async fn list_dir(
+        &self,
+        sync_root: &Path,
+        relative_path: &str,
+    ) -> Result<Vec<DirEntry>, SyncError> {
         let path = if relative_path.is_empty() {
             sync_root.to_path_buf()
         } else {
             sync_root.join(relative_path)
         };
         let mut entries = Vec::new();
-        let mut read_dir = tokio::fs::read_dir(&path).await.map_err(|e| SyncError::IoError {
-            path: path.display().to_string(),
-            source: e,
-        })?;
-        let sync_root_canon = sync_root
-            .canonicalize()
+        let mut read_dir = tokio::fs::read_dir(&path)
+            .await
             .map_err(|e| SyncError::IoError {
-                path: sync_root.display().to_string(),
+                path: path.display().to_string(),
                 source: e,
             })?;
-        while let Some(entry) = read_dir.next_entry().await.map_err(|e| SyncError::IoError {
-            path: path.display().to_string(),
+        let sync_root_canon = sync_root.canonicalize().map_err(|e| SyncError::IoError {
+            path: sync_root.display().to_string(),
             source: e,
-        })? {
+        })?;
+        while let Some(entry) = read_dir
+            .next_entry()
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: path.display().to_string(),
+                source: e,
+            })?
+        {
             let e = entry;
             let name = e.file_name();
             let name_str = name.to_string_lossy();
@@ -103,15 +115,20 @@ impl LocalFs for TokioLocalFs {
                 continue;
             }
             let full = e.path();
-            let meta = tokio::fs::symlink_metadata(&full).await.map_err(|e| SyncError::IoError {
-                path: full.display().to_string(),
-                source: e,
-            })?;
+            let meta =
+                tokio::fs::symlink_metadata(&full)
+                    .await
+                    .map_err(|e| SyncError::IoError {
+                        path: full.display().to_string(),
+                        source: e,
+                    })?;
             if meta.file_type().is_symlink() {
-                let target = tokio::fs::read_link(&full).await.map_err(|e| SyncError::IoError {
-                    path: full.display().to_string(),
-                    source: e,
-                })?;
+                let target = tokio::fs::read_link(&full)
+                    .await
+                    .map_err(|e| SyncError::IoError {
+                        path: full.display().to_string(),
+                        source: e,
+                    })?;
                 if !target.starts_with(&sync_root_canon) {
                     tracing::debug!("Skipping external symlink: {}", full.display());
                     continue;
@@ -153,8 +170,9 @@ impl LocalFs for TokioLocalFs {
                     path: path.display().to_string(),
                     source: std::io::Error::other(e),
                 })?;
-            let modified_dt = DateTime::from_timestamp(modified.as_secs() as i64, modified.subsec_nanos())
-                .unwrap_or_else(Utc::now);
+            let modified_dt =
+                DateTime::from_timestamp(modified.as_secs() as i64, modified.subsec_nanos())
+                    .unwrap_or_else(Utc::now);
             return Ok(Some(LocalFileMeta {
                 md5: String::new(),
                 modified: modified_dt,
@@ -167,10 +185,12 @@ impl LocalFs for TokioLocalFs {
                 path: sync_root.display().to_string(),
                 source: e,
             })?;
-            let target = tokio::fs::read_link(&path).await.map_err(|e| SyncError::IoError {
-                path: path.display().to_string(),
-                source: e,
-            })?;
+            let target = tokio::fs::read_link(&path)
+                .await
+                .map_err(|e| SyncError::IoError {
+                    path: path.display().to_string(),
+                    source: e,
+                })?;
             if !target.starts_with(&sync_root_canon) {
                 return Ok(None);
             }
@@ -186,11 +206,15 @@ impl LocalFs for TokioLocalFs {
                 path: path.display().to_string(),
                 source: std::io::Error::other(e),
             })?;
-        let modified_dt = DateTime::from_timestamp(modified.as_secs() as i64, modified.subsec_nanos()).unwrap_or_else(Utc::now);
-        let content = tokio::fs::read(&path).await.map_err(|e| SyncError::IoError {
-            path: path.display().to_string(),
-            source: e,
-        })?;
+        let modified_dt =
+            DateTime::from_timestamp(modified.as_secs() as i64, modified.subsec_nanos())
+                .unwrap_or_else(Utc::now);
+        let content = tokio::fs::read(&path)
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: path.display().to_string(),
+                source: e,
+            })?;
         let md5 = format!("{:x}", md5::compute(&content));
         let size = meta.len();
         Ok(Some(LocalFileMeta {
@@ -201,16 +225,14 @@ impl LocalFs for TokioLocalFs {
         }))
     }
 
-    async fn read_file(
-        &self,
-        sync_root: &Path,
-        relative_path: &str,
-    ) -> Result<Vec<u8>, SyncError> {
+    async fn read_file(&self, sync_root: &Path, relative_path: &str) -> Result<Vec<u8>, SyncError> {
         let path = sync_root.join(relative_path);
-        tokio::fs::read(&path).await.map_err(|e| SyncError::IoError {
-            path: path.display().to_string(),
-            source: e,
-        })
+        tokio::fs::read(&path)
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: path.display().to_string(),
+                source: e,
+            })
     }
 
     async fn write_atomic(
@@ -221,47 +243,59 @@ impl LocalFs for TokioLocalFs {
     ) -> Result<(), SyncError> {
         let path = sync_root.join(relative_path);
         if let Some(p) = path.parent() {
-            tokio::fs::create_dir_all(p).await.map_err(|e| SyncError::IoError {
-                path: p.display().to_string(),
-                source: e,
-            })?;
+            tokio::fs::create_dir_all(p)
+                .await
+                .map_err(|e| SyncError::IoError {
+                    path: p.display().to_string(),
+                    source: e,
+                })?;
         }
         let tmp = path.with_extension("gds_tmp");
-        tokio::fs::write(&tmp, content).await.map_err(|e| SyncError::IoError {
-            path: tmp.display().to_string(),
-            source: e,
-        })?;
-        tokio::fs::rename(&tmp, &path).await.map_err(|e| SyncError::IoError {
-            path: path.display().to_string(),
-            source: e,
-        })?;
+        tokio::fs::write(&tmp, content)
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: tmp.display().to_string(),
+                source: e,
+            })?;
+        tokio::fs::rename(&tmp, &path)
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: path.display().to_string(),
+                source: e,
+            })?;
         Ok(())
     }
 
     async fn create_dir_all(&self, sync_root: &Path, relative_path: &str) -> Result<(), SyncError> {
         let path = sync_root.join(relative_path);
-        tokio::fs::create_dir_all(&path).await.map_err(|e| SyncError::IoError {
-            path: path.display().to_string(),
-            source: e,
-        })?;
+        tokio::fs::create_dir_all(&path)
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: path.display().to_string(),
+                source: e,
+            })?;
         Ok(())
     }
 
     async fn remove_file(&self, sync_root: &Path, relative_path: &str) -> Result<(), SyncError> {
         let path = sync_root.join(relative_path);
-        tokio::fs::remove_file(&path).await.map_err(|e| SyncError::IoError {
-            path: path.display().to_string(),
-            source: e,
-        })?;
+        tokio::fs::remove_file(&path)
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: path.display().to_string(),
+                source: e,
+            })?;
         Ok(())
     }
 
     async fn remove_dir(&self, sync_root: &Path, relative_path: &str) -> Result<(), SyncError> {
         let path = sync_root.join(relative_path);
-        tokio::fs::remove_dir(&path).await.map_err(|e| SyncError::IoError {
-            path: path.display().to_string(),
-            source: e,
-        })?;
+        tokio::fs::remove_dir(&path)
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: path.display().to_string(),
+                source: e,
+            })?;
         Ok(())
     }
 
@@ -273,11 +307,18 @@ impl LocalFs for TokioLocalFs {
         })?)
     }
 
-    async fn is_external_symlink(&self, sync_root: &Path, full_path: &Path) -> Result<bool, SyncError> {
-        let meta = tokio::fs::symlink_metadata(full_path).await.map_err(|e| SyncError::IoError {
-            path: full_path.display().to_string(),
-            source: e,
-        })?;
+    async fn is_external_symlink(
+        &self,
+        sync_root: &Path,
+        full_path: &Path,
+    ) -> Result<bool, SyncError> {
+        let meta =
+            tokio::fs::symlink_metadata(full_path)
+                .await
+                .map_err(|e| SyncError::IoError {
+                    path: full_path.display().to_string(),
+                    source: e,
+                })?;
         if !meta.file_type().is_symlink() {
             return Ok(false);
         }
@@ -285,10 +326,12 @@ impl LocalFs for TokioLocalFs {
             path: sync_root.display().to_string(),
             source: e,
         })?;
-        let target = tokio::fs::read_link(full_path).await.map_err(|e| SyncError::IoError {
-            path: full_path.display().to_string(),
-            source: e,
-        })?;
+        let target = tokio::fs::read_link(full_path)
+            .await
+            .map_err(|e| SyncError::IoError {
+                path: full_path.display().to_string(),
+                source: e,
+            })?;
         Ok(!target.starts_with(&sync_root_canon))
     }
 }
