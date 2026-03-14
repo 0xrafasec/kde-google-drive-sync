@@ -27,7 +27,8 @@ mod tests {
             email: "user@gmail.com".to_string(),
             display_name: Some("User".to_string()),
             keyring_key: "gds:acc-1".to_string(),
-            created_at: DateTime::<Utc>::from_timestamp_secs(1_700_000_000).unwrap_or_else(Utc::now),
+            created_at: DateTime::<Utc>::from_timestamp_secs(1_700_000_000)
+                .unwrap_or_else(Utc::now),
         }
     }
 
