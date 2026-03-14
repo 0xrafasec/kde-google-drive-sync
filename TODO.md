@@ -41,46 +41,46 @@ Foundation. Everything else depends on this being solid.
 
 ### 1.3 Authentication (`gds-core::auth`)
 
-- [ ] OAuth2 client using `oauth2` crate (full PKCE flow for desktop app)
-- [ ] Loopback redirect server (listen on `127.0.0.1:PORT`, parse code+state)
-- [ ] Random port selection with fallback list if port is in use
-- [ ] CSRF state parameter generation and validation
-- [ ] Auth code → token exchange (access_token + refresh_token)
-- [ ] Token refresh logic (refresh before expiry, retry on 401)
-- [ ] `TokenStore` trait with `libsecret` implementation (store/load/delete refresh_token)
-- [ ] `TokenStore` implementation for KWallet (fallback)
-- [ ] `TokenStore` implementation for in-memory (tests only)
-- [ ] Automatic token refresh integrated into all API calls (transparent to callers)
-- [ ] `xdg-open` browser launch with error handling (fallback: print URL to stdout)
-- [ ] Full auth flow integration test using mock OAuth server
-- [ ] Token revocation on account removal
+- [x] OAuth2 client using `oauth2` crate (full PKCE flow for desktop app)
+- [x] Loopback redirect server (listen on `127.0.0.1:PORT`, parse code+state)
+- [x] Random port selection with fallback list if port is in use
+- [x] CSRF state parameter generation and validation
+- [x] Auth code → token exchange (access_token + refresh_token)
+- [x] Token refresh logic (refresh before expiry, retry on 401)
+- [x] `TokenStore` trait with `libsecret` implementation (store/load/delete refresh_token)
+- [x] `TokenStore` implementation for KWallet (fallback)
+- [x] `TokenStore` implementation for in-memory (tests only)
+- [x] Automatic token refresh integrated into all API calls (transparent to callers)
+- [x] `xdg-open` browser launch with error handling (fallback: print URL to stdout)
+- [x] Full auth flow integration test using mock OAuth server
+- [x] Token revocation on account removal
 
 ### 1.4 Google Drive API Client (`gds-core::api`)
 
-- [ ] `DriveClient` struct (reqwest client, base URL injectable for testing)
-- [ ] `files.list` — paginated, with `q` filter, `fields` partial response, `orderBy`
-- [ ] `files.get` — metadata only, with fields selection
-- [ ] `files.get?alt=media` — download file content to `AsyncWrite`
-- [ ] `files.export` — export Google Workspace files (Docs→docx, Sheets→xlsx, etc.)
-- [ ] `files.create` (simple upload, ≤5 MB, multipart)
-- [ ] `files.create` (resumable upload, >5 MB, chunked with progress callback)
-- [ ] `files.update` (metadata only: rename, move, trash)
-- [ ] `files.update` (content, simple upload)
-- [ ] `files.update` (content, resumable upload with resume-from-offset on failure)
-- [ ] `files.delete` (permanent delete)
-- [ ] `files.copy` (server-side copy)
-- [ ] `changes.getStartPageToken`
-- [ ] `changes.list` (paginated, stores nextPageToken, detects newStartPageToken)
-- [ ] `about.get` (quota information: usage, limit)
-- [ ] `drive.list` (shared drives support — future, but stub the interface now)
-- [ ] Exponential backoff with jitter for all retryable errors (429, 500, 502, 503, 504)
-- [ ] Retry-After header parsing for 429 responses
-- [ ] Per-request timeout (30s default, 5 min for large uploads)
-- [ ] Request/response tracing at TRACE level (with token redaction)
-- [ ] Google Workspace MIME type detection and export routing
-- [ ] Integration tests: all methods against wiremock mock server
-- [ ] Test: correct backoff timing under rate limiting
-- [ ] Test: resumable upload resume after simulated mid-upload failure
+- [x] `DriveClient` struct (reqwest client, base URL injectable for testing)
+- [x] `files.list` — paginated, with `q` filter, `fields` partial response, `orderBy`
+- [x] `files.get` — metadata only, with fields selection
+- [x] `files.get?alt=media` — download file content to `AsyncWrite`
+- [x] `files.export` — export Google Workspace files (Docs→docx, Sheets→xlsx, etc.)
+- [x] `files.create` (simple upload, ≤5 MB, multipart)
+- [x] `files.create` (resumable upload, >5 MB, chunked with progress callback)
+- [x] `files.update` (metadata only: rename, move, trash)
+- [x] `files.update` (content, simple upload)
+- [x] `files.update` (content, resumable upload with resume-from-offset on failure)
+- [x] `files.delete` (permanent delete)
+- [x] `files.copy` (server-side copy)
+- [x] `changes.getStartPageToken`
+- [x] `changes.list` (paginated, stores nextPageToken, detects newStartPageToken)
+- [x] `about.get` (quota information: usage, limit)
+- [x] `drive.list` (shared drives support — future, but stub the interface now)
+- [x] Exponential backoff with jitter for all retryable errors (429, 500, 502, 503, 504)
+- [x] Retry-After header parsing for 429 responses
+- [x] Per-request timeout (30s default, 5 min for large uploads)
+- [x] Request/response tracing at TRACE level (with token redaction)
+- [x] Google Workspace MIME type detection and export routing
+- [x] Integration tests: all methods against wiremock mock server
+- [x] Test: correct backoff timing under rate limiting
+- [x] Test: resumable upload resume after simulated mid-upload failure
 
 ### 1.5 Sync Engine (`gds-core::sync`)
 
