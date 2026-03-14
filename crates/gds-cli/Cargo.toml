@@ -6,13 +6,35 @@ authors.workspace = true
 license.workspace = true
 description = "gdrivesync CLI binary"
 
+[lib]
+name = "gds_cli"
+path = "src/lib.rs"
+
 [[bin]]
 name = "gdrivesync"
 path = "src/main.rs"
+
+[[bin]]
+name = "gds-cli-generate"
+path = "src/bin/generate_assets.rs"
 
 [dependencies]
 gds-core = { path = "../gds-core" }
 anyhow = "1.0"
 clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
+clap_mangen = "0.2"
+dialoguer = "0.12"
+dirs = "6"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "process"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+zbus = { version = "5", features = ["tokio"] }
+chrono = "0.4"
+libc = "0.2"
+
+[dev-dependencies]
+gds-daemon = { path = "../gds-daemon" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
