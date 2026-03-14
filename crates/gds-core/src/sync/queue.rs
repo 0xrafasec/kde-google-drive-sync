@@ -59,7 +59,7 @@ impl Default for SyncQueue {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sync::change::{SyncActionKind, SyncAction};
+    use crate::sync::change::{SyncAction, SyncActionKind};
 
     #[test]
     fn queue_orders_downloads_before_uploads() {
