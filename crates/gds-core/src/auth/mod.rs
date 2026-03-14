@@ -7,11 +7,11 @@ mod loopback;
 mod oauth_client;
 mod token_store;
 
-pub use flow::{authorize_flow, TokenProvider};
+pub use flow::{authorize_flow, AuthorizeFlowResult, TokenProvider};
 pub use loopback::{bind_loopback, parse_redirect_query, wait_for_redirect};
 pub use oauth_client::{
-    build_client, build_client_with_urls, revoke_token, AuthUrlResult, ExchangeResult,
-    RefreshResult, SCOPE_DRIVE, SCOPE_EMAIL,
+    build_client, build_client_with_urls, fetch_google_userinfo, revoke_token, AuthUrlResult,
+    ExchangeResult, RefreshResult, SCOPE_DRIVE, SCOPE_EMAIL, SCOPE_PROFILE,
 };
 pub use token_store::{InMemoryTokenStore, TokenStore};
 
