@@ -19,8 +19,17 @@ const REDIRECT_TIMEOUT: Duration = Duration::from_secs(300); // 5 min
 /// Buffer before expiry to refresh (refresh if token expires in less than this).
 const REFRESH_BUFFER_SECS: i64 = 60;
 
+/// Result of a successful authorization: initial access token and its lifetime.
+/// Use this for the first API call and to prime the token cache so we don't rely on
+/// reading the refresh token back from the keyring immediately (which can fail in some environments).
+pub struct AuthorizeFlowResult {
+    pub access_token: String,
+    pub expires_in: Duration,
+}
+
 /// Runs the full authorization flow: bind loopback, build client, get auth URL,
 /// optionally open browser, wait for redirect, exchange code, store refresh token.
+/// Returns the initial access token so the caller can use it without reading from the keyring.
 ///
 /// `open_url`: if provided, called with the auth URL (e.g. to run `xdg-open`).
 /// If None or if it fails, returns `Err(SyncError::OpenUrlRequired { url })` so the caller can show the URL.
@@ -31,7 +40,7 @@ pub async fn authorize_flow(
     store: &dyn TokenStore,
     account_key: &str,
     open_url: Option<impl FnOnce(&str) -> Result<(), Box<dyn std::error::Error + Send + Sync>>>,
-) -> Result<(), SyncError> {
+) -> Result<AuthorizeFlowResult, SyncError> {
     let (listener, actual_port) = bind_loopback(preferred_redirect_port).await?;
     let client = build_client(client_id, client_secret, actual_port)?;
     let AuthUrlResult {
@@ -58,7 +67,10 @@ pub async fn authorize_flow(
 
     let result = exchange_code(&client, &code, pkce_verifier).await?;
     store.store_refresh_token(account_key, &result.refresh_token)?;
-    Ok(())
+    Ok(AuthorizeFlowResult {
+        access_token: result.access_token,
+        expires_in: result.expires_in,
+    })
 }
 
 /// Provides valid access tokens by refreshing when needed. Thread-safe.
@@ -120,6 +132,19 @@ impl TokenProvider {
             );
         }
         Ok(result.access_token)
+    }
+
+    /// Primes the cache with an access token (e.g. from authorize_flow) so the next
+    /// get_valid_access_token uses it without reading the keyring.
+    pub async fn cache_insert(
+        &self,
+        account_key: &str,
+        access_token: String,
+        expires_in: Duration,
+    ) {
+        let expires_at = Utc::now().timestamp() + expires_in.as_secs() as i64;
+        let mut cache = self.cache.write().await;
+        cache.insert(account_key.to_string(), (access_token, expires_at));
     }
 
     /// Revokes the refresh token at Google and removes it from the store.
