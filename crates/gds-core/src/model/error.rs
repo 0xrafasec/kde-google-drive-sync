@@ -1,6 +1,5 @@
 //! Typed sync errors (library crate: thiserror).
 
-
 use thiserror::Error;
 
 /// Sync and API errors. All failure modes are explicit for proper handling.
@@ -17,6 +16,13 @@ pub enum SyncError {
 
     #[error("Authentication expired or invalid")]
     AuthExpired,
+
+    #[error("Authentication error: {message}")]
+    AuthError { message: String },
+
+    /// Browser could not be opened; caller should open this URL or show it to the user.
+    #[error("Open this URL to sign in: {url}")]
+    OpenUrlRequired { url: String },
 
     #[error("Network error: {0}")]
     NetworkError(#[from] std::io::Error),
@@ -43,11 +49,18 @@ mod tests {
     fn sync_error_display() {
         let e = SyncError::QuotaExceeded { retry_after: 60 };
         assert!(e.to_string().contains("60"));
-        let e2 = SyncError::Conflict { path: "/a/b".to_string() };
+        let e2 = SyncError::Conflict {
+            path: "/a/b".to_string(),
+        };
         assert!(e2.to_string().contains("Conflict"));
-        let e3 = SyncError::PathTraversal { path: "/etc/passwd".to_string() };
+        let e3 = SyncError::PathTraversal {
+            path: "/etc/passwd".to_string(),
+        };
         assert!(e3.to_string().contains("Path traversal"));
-        let e4 = SyncError::ApiError { code: 404, message: "Not Found".to_string() };
+        let e4 = SyncError::ApiError {
+            code: 404,
+            message: "Not Found".to_string(),
+        };
         assert!(e4.to_string().contains("404"));
     }
 }
