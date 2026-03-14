@@ -2,11 +2,16 @@
 
 use serde::{Deserialize, Serialize};
 
-/// OAuth / auth section (non-secret values only).
+/// OAuth / auth section. Prefer `credentials_path` to a Google JSON file (client_id + secret);
+/// otherwise set `client_id` and leave secret out (PKCE-only).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OAuthConfig {
     #[serde(rename = "client_id")]
     pub client_id: String,
+    /// Optional path to Google OAuth JSON (Desktop app). Relative to config dir or absolute.
+    /// File must stay outside the repo; see README and docs/GOOGLE_API.md.
+    #[serde(rename = "credentials_path", default)]
+    pub credentials_path: Option<String>,
     #[serde(rename = "redirect_port")]
     pub redirect_port: u16,
 }
@@ -15,6 +20,7 @@ impl Default for OAuthConfig {
     fn default() -> Self {
         Self {
             client_id: String::new(),
+            credentials_path: None,
             redirect_port: 8765,
         }
     }
