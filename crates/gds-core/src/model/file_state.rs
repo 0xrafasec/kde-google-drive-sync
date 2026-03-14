@@ -36,11 +36,7 @@ pub struct FileState {
 
 impl FileState {
     /// Build a minimal file state (e.g. for new local file not yet on Drive).
-    pub fn new_pending(
-        id: String,
-        sync_folder_id: String,
-        relative_path: String,
-    ) -> Self {
+    pub fn new_pending(id: String, sync_folder_id: String, relative_path: String) -> Self {
         Self {
             id,
             sync_folder_id,
