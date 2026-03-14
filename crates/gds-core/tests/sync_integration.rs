@@ -2,10 +2,12 @@
 
 use chrono::Utc;
 use gds_core::db::{create_pool, run_migrations, AccountRepository, SyncFolderRepository};
-use gds_core::model::{Account, ChangeSet, DriveChange, DriveFile, FileState, SyncFolder, SyncState};
+use gds_core::model::{
+    Account, ChangeSet, DriveChange, DriveFile, FileState, SyncFolder, SyncState,
+};
 use gds_core::sync::{
-    is_conflict, DiffEngine, DirEntry, LocalFileMeta, LocalFs, SyncAction, SyncActionKind,
-    parse_drive_modified, safe_local_path,
+    is_conflict, parse_drive_modified, safe_local_path, DiffEngine, DirEntry, LocalFileMeta,
+    LocalFs, SyncAction, SyncActionKind,
 };
 use std::collections::HashMap;
 use std::path::Path;
@@ -16,7 +18,11 @@ struct MockLocalFs {
 
 #[async_trait::async_trait]
 impl LocalFs for MockLocalFs {
-    async fn list_dir(&self, _sync_root: &Path, relative_path: &str) -> Result<Vec<DirEntry>, gds_core::model::SyncError> {
+    async fn list_dir(
+        &self,
+        _sync_root: &Path,
+        relative_path: &str,
+    ) -> Result<Vec<DirEntry>, gds_core::model::SyncError> {
         let mut entries = Vec::new();
         for (path, (_, _, is_dir)) in &self.files {
             let (parent, name) = if let Some((p, n)) = path.rsplit_once('/') {
@@ -42,17 +48,22 @@ impl LocalFs for MockLocalFs {
         _sync_root: &Path,
         relative_path: &str,
     ) -> Result<Option<LocalFileMeta>, gds_core::model::SyncError> {
-        Ok(self.files.get(relative_path).map(|(md5, modified, is_dir)| {
-            LocalFileMeta {
+        Ok(self
+            .files
+            .get(relative_path)
+            .map(|(md5, modified, is_dir)| LocalFileMeta {
                 md5: md5.clone(),
                 modified: *modified,
                 is_dir: *is_dir,
                 size: 0,
-            }
-        }))
+            }))
     }
 
-    async fn read_file(&self, _sync_root: &Path, _relative_path: &str) -> Result<Vec<u8>, gds_core::model::SyncError> {
+    async fn read_file(
+        &self,
+        _sync_root: &Path,
+        _relative_path: &str,
+    ) -> Result<Vec<u8>, gds_core::model::SyncError> {
         Ok(vec![])
     }
 
@@ -65,23 +76,43 @@ impl LocalFs for MockLocalFs {
         Ok(())
     }
 
-    async fn create_dir_all(&self, _sync_root: &Path, _relative_path: &str) -> Result<(), gds_core::model::SyncError> {
+    async fn create_dir_all(
+        &self,
+        _sync_root: &Path,
+        _relative_path: &str,
+    ) -> Result<(), gds_core::model::SyncError> {
         Ok(())
     }
 
-    async fn remove_file(&self, _sync_root: &Path, _relative_path: &str) -> Result<(), gds_core::model::SyncError> {
+    async fn remove_file(
+        &self,
+        _sync_root: &Path,
+        _relative_path: &str,
+    ) -> Result<(), gds_core::model::SyncError> {
         Ok(())
     }
 
-    async fn remove_dir(&self, _sync_root: &Path, _relative_path: &str) -> Result<(), gds_core::model::SyncError> {
+    async fn remove_dir(
+        &self,
+        _sync_root: &Path,
+        _relative_path: &str,
+    ) -> Result<(), gds_core::model::SyncError> {
         Ok(())
     }
 
-    async fn exists(&self, _sync_root: &Path, relative_path: &str) -> Result<bool, gds_core::model::SyncError> {
+    async fn exists(
+        &self,
+        _sync_root: &Path,
+        relative_path: &str,
+    ) -> Result<bool, gds_core::model::SyncError> {
         Ok(self.files.contains_key(relative_path))
     }
 
-    async fn is_external_symlink(&self, _sync_root: &Path, _full_path: &Path) -> Result<bool, gds_core::model::SyncError> {
+    async fn is_external_symlink(
+        &self,
+        _sync_root: &Path,
+        _full_path: &Path,
+    ) -> Result<bool, gds_core::model::SyncError> {
         Ok(false)
     }
 }
@@ -115,12 +146,12 @@ async fn diff_engine_compute_local_changes_new_upload() {
     SyncFolderRepository::insert(&pool, &folder).await.unwrap();
 
     let fs = MockLocalFs {
-        files: HashMap::from([
-            ("a.txt".to_string(), ("md5a".to_string(), Utc::now(), false)),
-        ]),
+        files: HashMap::from([("a.txt".to_string(), ("md5a".to_string(), Utc::now(), false))]),
     };
 
-    let actions = DiffEngine::compute_local_changes(sync_root, &folder, &pool, &fs).await.unwrap();
+    let actions = DiffEngine::compute_local_changes(sync_root, &folder, &pool, &fs)
+        .await
+        .unwrap();
     assert_eq!(actions.len(), 1);
     assert_eq!(actions[0].kind, SyncActionKind::NewUpload);
     assert_eq!(actions[0].relative_path, "a.txt");
@@ -175,7 +206,9 @@ async fn diff_engine_compute_remote_changes_new_download() {
         }],
     };
 
-    let actions = DiffEngine::compute_remote_changes(&folder, &change_set, &pool).await.unwrap();
+    let actions = DiffEngine::compute_remote_changes(&folder, &change_set, &pool)
+        .await
+        .unwrap();
     assert_eq!(actions.len(), 1);
     assert_eq!(actions[0].kind, SyncActionKind::NewDownload);
     assert_eq!(actions[0].relative_path, "new.txt");
@@ -183,7 +216,6 @@ async fn diff_engine_compute_remote_changes_new_download() {
 
 #[tokio::test]
 async fn diff_engine_merge_actions_conflict() {
-
     let t = Utc::now();
     let state = FileState {
         id: "id".to_string(),
