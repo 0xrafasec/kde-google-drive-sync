@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node name="/org/kde/GDriveSync">
+  <interface name="org.kde.GDriveSync.Daemon">
+    <method name="GetStatus">
+      <arg type="s" name="status" direction="out"/>
+      <arg type="u" name="syncing_count" direction="out"/>
+    </method>
+    <method name="PauseSync"/>
+    <method name="ResumeSync"/>
+    <method name="ForceSync">
+      <arg type="s" name="path" direction="in"/>
+    </method>
+    <method name="GetAccounts">
+      <arg type="a(sss)" name="accounts" direction="out"/>
+    </method>
+    <method name="AddAccount"/>
+    <method name="RemoveAccount">
+      <arg type="s" name="id" direction="in"/>
+    </method>
+    <method name="GetSyncFolders">
+      <arg type="a(sssssxb)" name="folders" direction="out"/>
+    </method>
+    <method name="AddSyncFolder">
+      <arg type="s" name="local_path" direction="in"/>
+      <arg type="s" name="drive_folder_id" direction="in"/>
+    </method>
+    <method name="RemoveSyncFolder">
+      <arg type="s" name="id" direction="in"/>
+    </method>
+    <method name="GetSyncErrors">
+      <arg type="a(sssix)" name="errors" direction="out"/>
+    </method>
+    <method name="GetAboutInfo">
+      <arg type="s" name="account_id" direction="in"/>
+      <arg type="(sss)" name="quota" direction="out"/>
+    </method>
+    <signal name="SyncStarted">
+      <arg type="s" name="account_id"/>
+      <arg type="s" name="path"/>
+    </signal>
+    <signal name="SyncCompleted">
+      <arg type="s" name="account_id"/>
+      <arg type="s" name="path"/>
+      <arg type="u" name="files_synced"/>
+    </signal>
+    <signal name="SyncError">
+      <arg type="s" name="account_id"/>
+      <arg type="s" name="path"/>
+      <arg type="s" name="error"/>
+    </signal>
+    <signal name="ConflictDetected">
+      <arg type="s" name="local_path"/>
+      <arg type="s" name="conflict_copy"/>
+    </signal>
+    <signal name="StatusChanged">
+      <arg type="s" name="new_status"/>
+    </signal>
+  </interface>
+</node>

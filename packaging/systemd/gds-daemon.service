@@ -1,0 +1,17 @@
+[Unit]
+Description=Google Drive Sync daemon for KDE
+Documentation=https://github.com/yourusername/google-drive-sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/gds-daemon
+Restart=on-failure
+RestartSec=5
+
+# User session (run as user, not root)
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus
+
+[Install]
+WantedBy=default.target
