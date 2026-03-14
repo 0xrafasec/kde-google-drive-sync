@@ -156,10 +156,7 @@ impl FileStateRepository {
     }
 
     /// Bulk upsert file states (in a transaction).
-    pub async fn bulk_upsert(
-        pool: &SqlitePool,
-        states: &[FileState],
-    ) -> Result<(), sqlx::Error> {
+    pub async fn bulk_upsert(pool: &SqlitePool, states: &[FileState]) -> Result<(), sqlx::Error> {
         let mut tx = pool.begin().await?;
         for state in states {
             let drive_modified = state.drive_modified.map(|t| t.timestamp_millis());
