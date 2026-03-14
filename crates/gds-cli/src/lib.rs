@@ -1,6 +1,7 @@
 //! `gdrivesync` CLI library (D-Bus client + argparse).
 
 pub mod cli;
+pub mod config;
 pub mod daemon_ctl;
 pub mod dbus_client;
 pub mod dbus_types;
