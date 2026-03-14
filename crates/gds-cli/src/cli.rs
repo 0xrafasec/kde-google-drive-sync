@@ -47,6 +47,8 @@ pub enum Command {
         #[arg(value_enum)]
         shell: Shell,
     },
+    /// Interactive setup: prompt for Client ID and Client Secret, store in the daemon database.
+    Configure,
 }
 
 #[derive(Clone, Copy, Debug, clap::ValueEnum)]
@@ -100,6 +102,8 @@ pub enum DaemonCmd {
     Start,
     /// Stop daemon (SIGTERM to PID file or systemctl).
     Stop,
+    /// Restart daemon (stop then start).
+    Restart,
     /// Show whether daemon is on D-Bus and PID file.
     Status,
 }
