@@ -1,0 +1,17 @@
+[package]
+name = "gds-kde"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "KDE UI: system tray and notifications"
+
+[[bin]]
+name = "gds-kde"
+path = "src/main.rs"
+
+[dependencies]
+gds-core = { path = "../gds-core" }
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

@@ -1,0 +1,18 @@
+[package]
+name = "gds-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "gdrivesync CLI binary"
+
+[[bin]]
+name = "gdrivesync"
+path = "src/main.rs"
+
+[dependencies]
+gds-core = { path = "../gds-core" }
+anyhow = "1.0"
+clap = { version = "4", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/gds-core",
+    "crates/gds-daemon",
+    "crates/gds-cli",
+    "crates/gds-kde",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Google Drive Sync Contributors"]
+license = "MIT"
+repository = "https://github.com/your-org/google-drive-sync"

@@ -1,0 +1,16 @@
+[package]
+name = "gds-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Pure sync logic and domain model for Google Drive Sync (no OS deps)"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+serde_json = "1.0"

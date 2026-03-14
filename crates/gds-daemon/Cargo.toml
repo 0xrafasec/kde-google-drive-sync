@@ -1,0 +1,15 @@
+[package]
+name = "gds-daemon"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Background sync daemon (systemd user unit)"
+
+[dependencies]
+gds-core = { path = "../gds-core" }
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4", features = ["derive"] }

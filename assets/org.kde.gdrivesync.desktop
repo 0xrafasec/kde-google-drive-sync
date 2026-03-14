@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Google Drive Sync
+Comment=Sync Google Drive with your KDE desktop
+Exec=gds-kde
+Icon=org.kde.gdrivesync
+Categories=Utility;Network;
+X-KDE-StartupNotify=false
