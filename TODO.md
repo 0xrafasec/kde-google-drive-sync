@@ -179,27 +179,29 @@ Foundation. Everything else depends on this being solid.
 
 All commands communicate with the daemon via D-Bus. No direct DB access.
 
-- [ ] `gds status` — print per-account sync status, quota, last sync time
-- [ ] `gds accounts list` — list configured accounts (email, id, status)
-- [ ] `gds accounts add` — trigger OAuth flow via daemon
-- [ ] `gds accounts remove <id>` — remove account with confirmation prompt
-- [ ] `gds sync pause` — pause all sync
-- [ ] `gds sync resume` — resume sync
-- [ ] `gds sync now [path]` — force immediate sync (optionally: specific path)
-- [ ] `gds folders list` — list sync folder mappings
-- [ ] `gds folders add <local-path> <drive-folder-id>` — add sync folder
-- [ ] `gds folders remove <id>` — remove sync folder mapping
-- [ ] `gds errors` — show recent sync errors
-- [ ] `gds quota` — show Drive storage quota per account
-- [ ] `gds daemon start` — start daemon if not running
-- [ ] `gds daemon stop` — graceful daemon shutdown
-- [ ] `gds daemon status` — is daemon running? PID?
-- [ ] `--json` global flag for machine-readable output (all commands)
-- [ ] `--quiet` / `--verbose` flags
-- [ ] Proper exit codes (0=success, 1=error, 2=daemon not running)
-- [ ] Man page generated from clap (`clap_mangen`)
-- [ ] Shell completions for bash, zsh, fish (`clap_complete`)
-- [ ] Integration tests: all commands (daemon mocked via D-Bus test double)
+Commands use binary **`gdrivesync`** (install `gds` → `gdrivesync` symlink if you want the short `gds status` form).
+
+- [x] `gdrivesync status` — per-account sync status, quota, last sync time
+- [x] `gdrivesync accounts list` — list configured accounts (email, id)
+- [x] `gdrivesync accounts add` — trigger OAuth flow via daemon
+- [x] `gdrivesync accounts remove <id>` — remove account with confirmation (or `--yes`)
+- [x] `gdrivesync sync pause` — pause all sync
+- [x] `gdrivesync sync resume` — resume sync
+- [x] `gdrivesync sync now [path]` — force sync (optional path)
+- [x] `gdrivesync folders list` — list sync folder mappings
+- [x] `gdrivesync folders add <local> <drive-id>` — add sync folder
+- [x] `gdrivesync folders remove <id>` — remove sync folder mapping
+- [x] `gdrivesync errors` — recent sync errors
+- [x] `gdrivesync quota` — Drive quota per account
+- [x] `gdrivesync daemon start` — systemd or spawn `gds-daemon`
+- [x] `gdrivesync daemon stop` — systemctl or SIGTERM via PID file
+- [x] `gdrivesync daemon status` — on-bus + PID file
+- [x] `--json` global flag
+- [x] `--quiet` / `--verbose`
+- [x] Exit codes 0 / 1 / 2 (daemon unreachable)
+- [x] Man page: `crates/gds-cli/assets/gdrivesync.1` (clap_mangen; regenerate: `cargo run -p gds-cli --bin gds-cli-generate`)
+- [x] Completions + `gdrivesync completions <shell>` (bash/zsh/fish)
+- [x] Integration tests (`tests/cli_integration.rs`, D-Bus test service + subprocess/helpers)
 
 ---
 
