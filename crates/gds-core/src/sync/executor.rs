@@ -2,6 +2,7 @@
 
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
+use tokio::sync::mpsc::UnboundedSender;
 
 use chrono::Utc;
 use sqlx::SqlitePool;
@@ -31,6 +32,8 @@ pub struct SyncExecutor {
     config: Config,
     max_concurrent_uploads: u32,
     max_concurrent_downloads: u32,
+    /// Optional notifier after a conflict copy is written `(local_path, conflict_copy_path)`.
+    conflict_tx: Option<UnboundedSender<(String, String)>>,
 }
 
 impl SyncExecutor {
@@ -51,7 +54,14 @@ impl SyncExecutor {
             local_fs,
             pool,
             config,
+            conflict_tx: None,
         }
+    }
+
+    /// Notifies `(local_path, conflict_copy_path)` when a conflict copy is created (UI / D-Bus).
+    pub fn with_conflict_notifier(mut self, tx: UnboundedSender<(String, String)>) -> Self {
+        self.conflict_tx = Some(tx);
+        self
     }
 
     /// Runs the queue until empty or error. Checks `pause` between each action.
@@ -273,7 +283,14 @@ impl SyncExecutor {
                 FileStateRepository::upsert(&self.pool, &new_state)
                     .await
                     .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
-                let _ = conflict_rel;
+                if let Some(ref tx) = self.conflict_tx {
+                    let local_s = sync_root
+                        .join(&action.relative_path)
+                        .to_string_lossy()
+                        .into_owned();
+                    let copy_s = sync_root.join(&conflict_rel).to_string_lossy().into_owned();
+                    let _ = tx.send((local_s, copy_s));
+                }
             }
             SyncActionKind::DeleteRemote => {
                 let state = action.state.as_ref().ok_or_else(|| SyncError::ApiError {

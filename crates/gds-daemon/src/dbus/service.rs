@@ -23,6 +23,10 @@ use crate::scheduler::SyncRequest;
 pub struct DaemonState {
     pub pool: SqlitePool,
     pub config: Config,
+    /// Resolved OAuth client_id (from config or credentials JSON).
+    pub resolved_client_id: String,
+    /// Resolved client_secret if loaded from credentials_path (never logged).
+    pub resolved_client_secret: Option<String>,
     pub token_provider: Arc<TokenProvider>,
     pub token_store: Arc<dyn TokenStore>,
     pub drive_client: DriveClient,
@@ -117,11 +121,18 @@ impl DaemonService {
     }
 
     async fn add_account(&self) -> zbus::fdo::Result<()> {
+        if self.state.resolved_client_id.is_empty()
+            || self.state.resolved_client_secret.is_none()
+        {
+            return Err(zbus::fdo::Error::Failed(
+                "OAuth credentials not configured. Run 'gdrivesync configure' to set Client ID and Client Secret, then restart the daemon.".to_string(),
+            ));
+        }
         let account_id = uuid::Uuid::new_v4().to_string();
         let keyring_key = format!("gds:{}", account_id);
         let store = self.state.token_store.as_ref();
-        let client_id = self.state.config.oauth.client_id.clone();
-        let client_secret: Option<String> = None;
+        let client_id = self.state.resolved_client_id.clone();
+        let client_secret = self.state.resolved_client_secret.as_deref();
         let redirect_port = self.state.config.oauth.redirect_port;
 
         let open_url = |url: &str| {
@@ -129,7 +140,7 @@ impl DaemonService {
             Ok(())
         };
 
-        authorize_flow(
+        let auth_result = authorize_flow(
             &client_id,
             client_secret.as_deref(),
             redirect_port,
@@ -140,17 +151,61 @@ impl DaemonService {
         .await
         .map_err(|e| zbus::fdo::Error::Failed(e.to_string()))?;
 
+        self.state
+            .token_provider
+            .cache_insert(
+                &keyring_key,
+                auth_result.access_token.clone(),
+                auth_result.expires_in,
+            )
+            .await;
+
+        let access_token = auth_result.access_token;
+
+        let about_user = self
+            .state
+            .drive_client
+            .about_get(&access_token, "user(displayName,emailAddress)")
+            .await
+            .ok()
+            .and_then(|a| a.user);
+
+        let (email, display_name) = match &about_user {
+            Some(u) => (
+                u.email_address.clone().unwrap_or_else(String::new),
+                u.display_name.clone(),
+            ),
+            None => (String::new(), None),
+        };
+
+        let (email, display_name) = if email.is_empty() {
+            tracing::warn!("Drive about.get had no user or empty email; trying OAuth2 userinfo endpoint");
+            gds_core::auth::fetch_google_userinfo(&access_token)
+                .await
+                .map(|(e, n)| (e, n))
+                .unwrap_or_else(|err| {
+                    tracing::warn!(error = %err, "userinfo endpoint failed");
+                    (email, display_name)
+                })
+        } else {
+            (email, display_name)
+        };
+
         let account = Account {
             id: account_id.clone(),
-            email: String::new(),
-            display_name: None,
+            email: email.clone(),
+            display_name: display_name.clone(),
             keyring_key: keyring_key.clone(),
             created_at: Utc::now(),
         };
         AccountRepository::insert(&self.state.pool, &account)
             .await
             .map_err(|e| zbus::fdo::Error::Failed(format!("insert account: {}", e)))?;
-        info!(account_id = %account_id, "account added");
+        info!(
+            account_id = %account_id,
+            email = %email,
+            "account added"
+        );
         Ok(())
     }
 
@@ -160,11 +215,18 @@ impl DaemonService {
             .map_err(|e| zbus::fdo::Error::Failed(format!("get account: {}", e)))?
             .ok_or_else(|| zbus::fdo::Error::Failed("account not found".to_string()))?;
 
-        self.state
+        if let Err(e) = self
+            .state
             .token_provider
             .revoke_and_remove(&account.keyring_key)
             .await
-            .map_err(|e| zbus::fdo::Error::Failed(e.to_string()))?;
+        {
+            tracing::warn!(
+                account_id = %id,
+                error = %e,
+                "revoke/remove token failed (e.g. keyring entry missing); removing account from DB anyway"
+            );
+        }
 
         AccountRepository::delete_cascade(&self.state.pool, id)
             .await

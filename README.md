@@ -105,22 +105,24 @@ Packaging (RPM, DEB, Flatpak) is planned; see [TODO.md](TODO.md) Phase 6.
 
 ## Quick start (when implemented)
 
-1. **Start the daemon** (e.g. via systemd user unit or `gds daemon start`).
-2. **Add a Google account** — `gdrivesync accounts add` (opens browser for OAuth).
-3. **Add a sync folder** — `gdrivesync folders add /path/to/local/folder <drive-folder-id>`.
-4. Sync runs automatically; use the tray icon or `gdrivesync status` to check.
+1. **Set up OAuth once** — run `gdrivesync configure` (prompts for Client ID and Client Secret; stored in the daemon’s database). Without this, `accounts add` will tell you to run configure.
+2. **Start the daemon** — e.g. `gdrivesync daemon start` or systemd user unit.
+3. **Add a Google account** — `gdrivesync accounts add` (opens browser for OAuth).
+4. **Browse Drive as a remote folder (no full download)** — use **Dolphin** with the **KIO worker** (`gdrive:/`). Files are listed and opened on demand; nothing is copied to disk unless you open or download. The KIO worker is in progress (see [docs/KDE_INTEGRATION.md](docs/KDE_INTEGRATION.md) and `kio-worker/`).
+5. **Optional: full sync for specific folders** — if you want a **real local copy** of a Drive folder (offline, full two-way sync), run `gdrivesync folders add /path/to/local/folder <drive-folder-id>`. That path will mirror the Drive folder (downloads and stores files locally). Use **`root`** as the drive-folder-id to mirror your whole “My Drive”. This is for when you want everything in that folder on disk; for “see my Drive without downloading everything” use the KIO/Dolphin path above.
 
-Config (non-secret): `~/.config/gds/config.toml`. Secrets live in the system keyring only.
+Config: `~/.config/gds/config.toml`. OAuth Client ID and secret are stored in the daemon’s SQLite DB (`~/.local/share/gds/state.db`); refresh tokens stay in the system keyring.
 
 ---
 
 ## Configuration
 
-Example `~/.config/gds/config.toml`:
+Config lives under **`~/.config/gds/`** (or `$XDG_CONFIG_HOME/gds`); the daemon’s database is in **`~/.local/share/gds/`** (or `$GDS_DATA_DIR`). These are created automatically when the daemon starts or you run `gdrivesync configure`.
+
+Example `~/.config/gds/config.toml` (sync/UI settings; OAuth credentials are in the DB, not in config):
 
 ```toml
 [oauth]
-client_id = "YOUR_CLIENT_ID.apps.googleusercontent.com"
 redirect_port = 8765
 
 [sync]
@@ -133,7 +135,15 @@ show_notifications = true
 notification_timeout_ms = 5000
 ```
 
-You need a Google Cloud OAuth 2.0 Desktop client ID; see [docs/GOOGLE_API.md](docs/GOOGLE_API.md).
+- **OAuth setup:** run **`gdrivesync configure`**. You are prompted for Client ID and Client Secret (from [Google Cloud Console](https://console.cloud.google.com/) → Credentials → OAuth client ID, Desktop app). They are stored in the daemon’s database. Restart the daemon if it is already running.
+
+### Google OAuth & open source (costs, client ID)
+
+- **No meaningful dollar cost** for normal use: creating a Google Cloud project and OAuth credentials is free, and the Drive API is used within **free quotas** for a typical desktop sync client. You are not charged just for “having a client ID” or for ordinary sync traffic.
+- **Why bring your own client ID?** This repo is open source. Shipping one shared secret in the tree would be unsafe; sharing one client ID with the whole internet could **crowd API quotas** for that single project. The usual pattern is: **each user (and each developer) creates their own Google Cloud project**, enables the Drive API, creates an **OAuth 2.0 Desktop** client, and puts **`client_id` in local config** (as above). Never commit client secrets or tokens.
+- **What to do:** In [Google Cloud Console](https://console.cloud.google.com/), create a project → enable **Google Drive API** → **Credentials** → **OAuth client ID** (Desktop app). Then run **`gdrivesync configure`** and enter the Client ID and Client Secret. Details: [docs/GOOGLE_API.md](docs/GOOGLE_API.md).
+
+**If the daemon says OAuth is not configured when you run `accounts add`:** run **`gdrivesync configure`** to set Client ID and Client Secret, then restart the daemon.
 
 ---
 

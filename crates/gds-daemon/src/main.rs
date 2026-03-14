@@ -8,7 +8,9 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use gds_core::api::DriveClient;
 use gds_core::auth::{KeyringTokenStore, TokenProvider};
-use gds_core::db::{create_pool_from_path, run_migrations, SyncFolderRepository};
+use gds_core::db::{
+    create_pool_from_path, get_oauth_app_credentials, run_migrations, SyncFolderRepository,
+};
 use gds_core::model::Config;
 use gds_daemon::dbus::{DaemonService, DaemonState};
 use gds_daemon::scheduler::{Scheduler, TokenBucket};
@@ -63,6 +65,16 @@ fn load_config(config_dir: &std::path::Path) -> Result<Config> {
     toml::from_str(&s).with_context(|| format!("parse config {}", path.display()))
 }
 
+/// Resolve OAuth client_id and client_secret from the DB only.
+async fn resolve_oauth_credentials(pool: &sqlx::SqlitePool) -> (String, Option<String>) {
+    get_oauth_app_credentials(pool)
+        .await
+        .ok()
+        .flatten()
+        .map(|(id, secret)| (id, Some(secret)))
+        .unwrap_or_else(|| (String::new(), None))
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
@@ -79,6 +91,10 @@ async fn main() -> Result<()> {
     let config_dir = args.config_dir.unwrap_or_else(config_dir);
     let data_dir = args.data_dir.unwrap_or_else(data_dir);
 
+    // Ensure config dir exists (RPM/DEB/Flatpak do not create ~/.config/gds).
+    std::fs::create_dir_all(&config_dir)
+        .with_context(|| format!("create config dir {}", config_dir.display()))?;
+
     let config = load_config(&config_dir).unwrap_or_else(|e| {
         warn!(error = %e, "load config failed, using defaults");
         Config::default()
@@ -93,11 +109,19 @@ async fn main() -> Result<()> {
         .context("create db pool")?;
     run_migrations(&pool).await.context("run migrations")?;
 
+    let (resolved_client_id, resolved_client_secret) = resolve_oauth_credentials(&pool).await;
+
+    if resolved_client_id.is_empty() || resolved_client_secret.is_none() {
+        warn!(
+            "No OAuth credentials in the database. Run 'gdrivesync configure' to set up Client ID and Client Secret, then restart the daemon."
+        );
+    }
+
     let store = Arc::new(KeyringTokenStore);
     let token_provider = Arc::new(
         TokenProvider::new(
-            &config.oauth.client_id,
-            None,
+            &resolved_client_id,
+            resolved_client_secret.as_deref(),
             config.oauth.redirect_port,
             store.clone(),
         )
@@ -113,6 +137,8 @@ async fn main() -> Result<()> {
     let state = Arc::new(DaemonState {
         pool: pool.clone(),
         config: config.clone(),
+        resolved_client_id: resolved_client_id.clone(),
+        resolved_client_secret: resolved_client_secret.clone(),
         token_provider: token_provider.clone(),
         token_store: store,
         drive_client: drive_client.clone(),
@@ -121,20 +147,22 @@ async fn main() -> Result<()> {
         sync_request_tx: sync_tx.clone(),
     });
 
-    let _conn = connection::Builder::session()
-        .context("session bus")?
-        .name(DAEMON_NAME)
-        .context("request bus name (is another daemon running?)")?
-        .serve_at(
-            OBJECT_PATH,
-            DaemonService {
-                state: state.clone(),
-            },
-        )
-        .context("serve D-Bus object")?
-        .build()
-        .await
-        .context("build connection")?;
+    let conn = Arc::new(
+        connection::Builder::session()
+            .context("session bus")?
+            .name(DAEMON_NAME)
+            .context("request bus name (is another daemon running?)")?
+            .serve_at(
+                OBJECT_PATH,
+                DaemonService {
+                    state: state.clone(),
+                },
+            )
+            .context("serve D-Bus object")?
+            .build()
+            .await
+            .context("build connection")?,
+    );
 
     info!("D-Bus service registered as {}", DAEMON_NAME);
 
@@ -148,6 +176,8 @@ async fn main() -> Result<()> {
         rate_limiter,
         sync_rx,
         shutdown.clone(),
+        conn.clone(),
+        syncing_count.clone(),
     );
     let scheduler_handle = tokio::spawn(scheduler.run());
 

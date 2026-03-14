@@ -15,3 +15,15 @@ gds-core = { path = "../gds-core" }
 anyhow = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+ksni = { version = "0.3", features = ["tokio"] }
+zbus = { version = "5", features = ["tokio"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "process"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "6"
+toml = "0.9"
+chrono = "0.4"
+futures-util = "0.3"
+
+[dev-dependencies]
+tempfile = "3"

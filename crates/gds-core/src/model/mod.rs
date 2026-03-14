@@ -12,7 +12,7 @@ mod sync_state;
 
 pub use account::Account;
 pub use change_set::{ChangeSet, DriveChange};
-pub use config::Config;
+pub use config::{Config, OAuthConfig};
 pub use conflict::ConflictInfo;
 pub use drive_file::DriveFile;
 pub use error::SyncError;

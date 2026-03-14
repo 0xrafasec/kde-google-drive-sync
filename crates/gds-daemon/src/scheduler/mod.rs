@@ -5,7 +5,7 @@ mod retry;
 
 use std::collections::VecDeque;
 use std::path::Path;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -18,6 +18,9 @@ use gds_core::sync::{DiffEngine, SyncExecutor, SyncQueue, TokioLocalFs};
 use sqlx::SqlitePool;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, instrument, warn};
+use zbus::Connection;
+
+use crate::dbus::signals;
 
 pub use rate_limit::TokenBucket;
 pub use retry::{backoff_duration, next_retry_at, should_retry_now};
@@ -29,7 +32,7 @@ pub struct SyncRequest {
 }
 
 /// Runs one full sync cycle for a folder: changes list, diff, merge, execute.
-#[instrument(skip(pool, drive_client, token_provider, pause), level = "info")]
+#[instrument(skip(pool, drive_client, token_provider, pause, conn), level = "info")]
 pub async fn run_sync_loop(
     pool: &SqlitePool,
     drive_client: &DriveClient,
@@ -37,6 +40,8 @@ pub async fn run_sync_loop(
     config: &Config,
     sync_folder: &SyncFolder,
     pause: &AtomicBool,
+    conn: &Connection,
+    syncing_count: &AtomicU32,
 ) -> Result<u32, SyncError> {
     let account = AccountRepository::get_by_id(pool, &sync_folder.account_id)
         .await
@@ -81,6 +86,23 @@ pub async fn run_sync_loop(
     let actions = DiffEngine::merge_actions(local_actions, remote_actions);
     let mut queue = SyncQueue::from_actions(actions);
 
+    let (conflict_tx, mut conflict_rx) = tokio::sync::mpsc::unbounded_channel::<(String, String)>();
+    let conn_conf = conn.clone();
+    let conflict_task = tokio::spawn(async move {
+        while let Some((local_path, conflict_copy)) = conflict_rx.recv().await {
+            if signals::conflict_detected(&conn_conf, &local_path, &conflict_copy)
+                .await
+                .is_err()
+            {
+                break;
+            }
+        }
+    });
+
+    syncing_count.fetch_add(1, Ordering::Relaxed);
+    let _ = signals::sync_started(conn, &folder.account_id, &folder.local_path).await;
+    let _ = signals::status_changed(conn, "syncing").await;
+
     let executor = SyncExecutor::new(
         drive_client.clone(),
         token_provider,
@@ -88,9 +110,47 @@ pub async fn run_sync_loop(
         local_fs,
         pool.clone(),
         config.clone(),
-    );
+    )
+    .with_conflict_notifier(conflict_tx);
 
-    let executed = executor.run(&folder, &mut queue, pause).await?;
+    let executed = executor.run(&folder, &mut queue, pause).await;
+
+    let executed = match executed {
+        Ok(n) => n,
+        Err(e) => {
+            syncing_count.fetch_sub(1, Ordering::Relaxed);
+            let status = if pause.load(Ordering::Relaxed) {
+                "paused"
+            } else {
+                "idle"
+            };
+            let _ = signals::status_changed(conn, status).await;
+            let _ = signals::sync_error(
+                conn,
+                &folder.account_id,
+                &folder.local_path,
+                &e.to_string(),
+            )
+            .await;
+            conflict_task.abort();
+            return Err(e);
+        }
+    };
+
+    syncing_count.fetch_sub(1, Ordering::Relaxed);
+    let status = if pause.load(Ordering::Relaxed) {
+        "paused"
+    } else {
+        "idle"
+    };
+    let _ = signals::sync_completed(
+        conn,
+        &folder.account_id,
+        &folder.local_path,
+        executed,
+    )
+    .await;
+    let _ = signals::status_changed(conn, status).await;
 
     if let Some(new_token) = &merged.new_start_page_token {
         SyncFolderRepository::update_page_token(pool, &folder.id, Some(new_token))
@@ -143,6 +203,8 @@ pub struct Scheduler {
     rx: mpsc::UnboundedReceiver<SyncRequest>,
     /// Shutdown signal
     shutdown: Arc<AtomicBool>,
+    conn: Arc<Connection>,
+    syncing_count: Arc<AtomicU32>,
 }
 
 impl Scheduler {
@@ -155,6 +217,8 @@ impl Scheduler {
         rate_limiter: Arc<TokenBucket>,
         rx: mpsc::UnboundedReceiver<SyncRequest>,
         shutdown: Arc<AtomicBool>,
+        conn: Arc<Connection>,
+        syncing_count: Arc<AtomicU32>,
     ) -> Self {
         Self {
             pool,
@@ -165,6 +229,8 @@ impl Scheduler {
             rate_limiter,
             rx,
             shutdown,
+            conn,
+            syncing_count,
         }
     }
 
@@ -230,6 +296,8 @@ impl Scheduler {
                     &self.config,
                     &folder,
                     &self.pause,
+                    self.conn.as_ref(),
+                    self.syncing_count.as_ref(),
                 )
                 .await
                 {

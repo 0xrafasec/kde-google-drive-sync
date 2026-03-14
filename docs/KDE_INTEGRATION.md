@@ -312,6 +312,16 @@ a richer UI than the system tray. This is post-MVP.
 The widget can be developed independently using `gds-daemon`'s D-Bus interface
 as its only dependency.
 
+## Manual test checklist (Phase 4)
+
+1. **Daemon running**: `systemctl --user start gds-daemon` or `RUST_LOG=info cargo run -p gds-daemon -- --foreground`
+2. **Tray**: `cargo run -p gds-kde` — icon appears; tooltip shows account + “Up to date” or “Syncing”
+3. **Menu**: Open in Browser → Drive opens; Pause → `gdrivesync status` shows paused; Resume → idle
+4. **Force Sync**: queues sync (daemon log)
+5. **Preferences**: changes `~/.config/gds/config.toml` poll interval (restart daemon to apply poll)
+6. **Activity log**: lists recent `SyncCompleted` / `SyncStarted` lines after a sync
+7. **Notifications**: after sync, “Sync complete”; on conflict, warning + actions (if daemon emitted `ConflictDetected`)
+
 ## Testing KDE Integration
 
 ```bash

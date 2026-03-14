@@ -48,6 +48,8 @@ async fn dbus_get_status_returns_idle_when_no_sync() {
     let state = Arc::new(DaemonState {
         pool,
         config: config.clone(),
+        resolved_client_id: config.oauth.client_id.clone(),
+        resolved_client_secret: None,
         token_provider,
         token_store: store,
         drive_client,

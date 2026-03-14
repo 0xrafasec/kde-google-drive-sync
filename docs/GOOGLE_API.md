@@ -11,16 +11,25 @@
 5. Download `client_secret.json`
 6. **NEVER commit this file** — add to `.gitignore`
 
-### 2. Config Structure
+### 2. OAuth credentials (database)
 
-Store non-secret config (client_id, not client_secret) in:
-`~/.config/gds/config.toml`
+Run:
+
+```bash
+gdrivesync configure
+```
+
+You are prompted for **Client ID** and **Client secret** (from the downloaded JSON or the Cloud Console). They are stored in the daemon’s SQLite database (`~/.local/share/gds/state.db`), not in config. Restart the daemon if it is already running. If you run `accounts add` before configuring, the daemon will tell you to run `gdrivesync configure`.
+
+### 3. Config structure (sync / UI only)
+
+Config lives in `~/.config/gds/config.toml` and holds sync/UI settings. OAuth credentials are in the DB.
+
+**Example**
 
 ```toml
 [oauth]
-client_id = "123456789-abc.apps.googleusercontent.com"
-# client_secret is in keyring, NOT here
-redirect_port = 8765   # localhost redirect port for auth flow
+redirect_port = 8765
 
 [sync]
 poll_interval_secs = 30
@@ -32,8 +41,6 @@ conflict_suffix_format = ".conflict-%Y%m%d-%H%M%S"
 show_notifications = true
 notification_timeout_ms = 5000
 ```
-
-Store `client_secret` in keyring under key `gds-client-secret`.
 
 ## Drive API v3 Key Endpoints
 

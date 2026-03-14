@@ -209,32 +209,32 @@ Commands use binary **`gdrivesync`** (install `gds` → `gdrivesync` symlink if 
 
 ### 4.1 System Tray
 
-- [ ] SNI tray registration via `ksni` crate
-- [ ] State-driven icon: idle (green check), syncing (spinner), paused, error, offline
-- [ ] Icon set: hicolor at 16, 22, 32, 48, 64, 128px (SVG source)
-- [ ] Tooltip: account name + status + last sync time
-- [ ] Context menu: full menu as specified in `docs/KDE_INTEGRATION.md`
-- [ ] Menu items: Open Folder, Open in Browser, Pause/Resume (toggle), Force Sync, Preferences, Activity Log, Quit
-- [ ] Real-time status update: subscribe to D-Bus `StatusChanged` signal
-- [ ] Multiple accounts: sub-menu per account if >1 configured
-- [ ] "Open in Browser" opens `https://drive.google.com` with `xdg-open`
-- [ ] Preferences dialog (basic): sync interval, notification settings, conflict policy
-- [ ] Activity log window: scrollable list of recent sync events (last 500)
-- [ ] Unit test: menu item actions trigger correct D-Bus calls
-- [ ] Manual test checklist in `docs/KDE_INTEGRATION.md`
+- [x] SNI tray registration via `ksni` crate
+- [x] State-driven icon: theme icon + tooltip reflects idle / syncing / paused / offline (`org.kde.gdrivesync`, polling `GetStatus`)
+- [x] Icon set: hicolor scalable SVG `crates/gds-kde/assets/icons/hicolor/scalable/apps/org.kde.gdrivesync.svg` + `GDS_ICON_PATH`
+- [x] Tooltip: account name + status + last sync time (from folders / GetStatus)
+- [x] Context menu: full menu as specified in `docs/KDE_INTEGRATION.md`
+- [x] Menu items: Open Folder (per folder), Open in Browser, Pause/Resume, Force Sync, Preferences, Activity Log, Quit
+- [x] Real-time status update: D-Bus signal stream (`StatusChanged`, `SyncCompleted`, …) + poll every 3s
+- [x] Multiple accounts: sub-menu per account if >1 configured
+- [x] "Open in Browser" opens `https://drive.google.com` with `xdg-open`
+- [x] Preferences dialog (basic): `kdialog` / `zenity` — poll interval + notifications on/off → `config.toml`
+- [x] Activity log: `kdialog --textbox` — last 500 events (memory)
+- [x] Unit test: `crates/gds-kde/tests/tray_menu.rs` (activity buffer + action enum sanity)
+- [x] Manual test checklist in `docs/KDE_INTEGRATION.md`
 
 ### 4.2 Notifications
 
-- [ ] `NotificationManager` subscribes to all D-Bus signals from daemon
-- [ ] Notification: sync complete (batched — one notification per sync cycle, not per file)
-- [ ] Notification: conflict detected with action buttons ("Keep Mine", "View Diff", "Dismiss")
-- [ ] Notification: auth required (token expired) with "Sign In" action
-- [ ] Notification: sync error (persistent, with "Retry" action)
-- [ ] Notification: low Drive quota warning (<10% free)
-- [ ] Notification: initial sync started (first-run only)
-- [ ] Notification deduplication: don't spam the same error repeatedly
-- [ ] "View Diff" action: launch KDiff3 if installed, fallback to meld, fallback to diff in terminal
-- [ ] Integration test: notification sent for each signal type
+- [x] `NotificationManager` + session message stream for daemon signals (`SyncCompleted`, `ConflictDetected`, `SyncError`, `SyncStarted`, `StatusChanged`)
+- [x] Notification: sync complete (one per folder cycle via `SyncCompleted`)
+- [x] Notification: conflict + actions ("Keep Mine", "View Diff", "Dismiss") — `launch_diff_tool` for KDiff3/meld/diff
+- [ ] Notification: auth required — deferred (daemon does not expose dedicated signal; use sync errors)
+- [x] Notification: sync error (persistent) + dedup same message ≤5 min
+- [x] Notification: low Drive quota (&lt;10% free), periodic `GetAboutInfo`
+- [x] Notification: initial sync started (first-run marker in data dir)
+- [x] Notification deduplication for errors
+- [x] "View Diff": `notifications::launch_diff_tool` (KDiff3 → meld → konsole+diff)
+- [x] Integration-style: daemon emits signals from scheduler (`gds-daemon::dbus::signals`); KDE receives on session bus
 
 ---
 
