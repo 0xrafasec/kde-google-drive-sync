@@ -72,23 +72,21 @@ impl SyncErrorRepository {
 
         Ok(rows
             .into_iter()
-            .map(|(id, file_state_id, error_message, occurred_at, retry_count)| {
-                SyncErrorRecord {
+            .map(
+                |(id, file_state_id, error_message, occurred_at, retry_count)| SyncErrorRecord {
                     id,
                     file_state_id,
                     error_message,
-                    occurred_at: DateTime::from_timestamp_secs(occurred_at).unwrap_or_else(Utc::now),
+                    occurred_at: DateTime::from_timestamp_secs(occurred_at)
+                        .unwrap_or_else(Utc::now),
                     retry_count,
-                }
-            })
+                },
+            )
             .collect())
     }
 
     /// Clear errors for a file state.
-    pub async fn clear_for_file(
-        pool: &SqlitePool,
-        file_state_id: &str,
-    ) -> Result<(), sqlx::Error> {
+    pub async fn clear_for_file(pool: &SqlitePool, file_state_id: &str) -> Result<(), sqlx::Error> {
         sqlx::query("DELETE FROM sync_errors WHERE file_state_id = ?")
             .bind(file_state_id)
             .execute(pool)
