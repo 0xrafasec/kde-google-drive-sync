@@ -19,6 +19,9 @@ reqwest = { version = "0.12", features = ["json", "multipart", "rustls-tls"], de
 urlencoding = "2"
 tracing = "0.1"
 mime_guess = "2.0"
+uuid = { version = "1", features = ["v4"] }
+md5 = "0.7"
+async-trait = "0.1"
 
 [features]
 default = []
@@ -33,3 +36,4 @@ optional = true
 serde_json = "1.0"
 tokio = { version = "1", features = ["rt", "macros", "net"] }
 wiremock = "0.6"
+tempfile = "3"
