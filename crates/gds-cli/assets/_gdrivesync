@@ -1,0 +1,989 @@
+#compdef gdrivesync
+
+autoload -U is-at-least
+
+_gdrivesync() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+":: :_gdrivesync_commands" \
+"*::: :->gdrivesync" \
+&& ret=0
+    case $state in
+    (gdrivesync)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-command-$line[1]:"
+        case $line[1] in
+            (status)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(accounts)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_gdrivesync__accounts_commands" \
+"*::: :->accounts" \
+&& ret=0
+
+    case $state in
+    (accounts)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-accounts-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(add)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(remove)
+_arguments "${_arguments_options[@]}" : \
+'-y[]' \
+'--yes[]' \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':id:_default' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__accounts__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-accounts-help-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(add)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(remove)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(sync)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_gdrivesync__sync_commands" \
+"*::: :->sync" \
+&& ret=0
+
+    case $state in
+    (sync)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-sync-command-$line[1]:"
+        case $line[1] in
+            (pause)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(resume)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(now)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::path:_default' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__sync__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-sync-help-command-$line[1]:"
+        case $line[1] in
+            (pause)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(resume)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(now)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(folders)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_gdrivesync__folders_commands" \
+"*::: :->folders" \
+&& ret=0
+
+    case $state in
+    (folders)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-folders-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(add)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':local_path:_default' \
+':drive_folder_id:_default' \
+&& ret=0
+;;
+(remove)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':id:_default' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__folders__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-folders-help-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(add)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(remove)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(errors)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(quota)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(daemon)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_gdrivesync__daemon_commands" \
+"*::: :->daemon" \
+&& ret=0
+
+    case $state in
+    (daemon)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-daemon-command-$line[1]:"
+        case $line[1] in
+            (start)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(stop)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(status)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__daemon__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-daemon-help-command-$line[1]:"
+        case $line[1] in
+            (start)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(stop)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(status)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(completions)
+_arguments "${_arguments_options[@]}" : \
+'--json[Machine-readable JSON on stdout (stable field names)]' \
+'-q[Suppress non-error stdout]' \
+'--quiet[Suppress non-error stdout]' \
+'-v[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'--verbose[Extra diagnostics (implies info-level logging if RUST_LOG unset)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':shell:(bash zsh fish)' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-help-command-$line[1]:"
+        case $line[1] in
+            (status)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(accounts)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__help__accounts_commands" \
+"*::: :->accounts" \
+&& ret=0
+
+    case $state in
+    (accounts)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-help-accounts-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(add)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(remove)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(sync)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__help__sync_commands" \
+"*::: :->sync" \
+&& ret=0
+
+    case $state in
+    (sync)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-help-sync-command-$line[1]:"
+        case $line[1] in
+            (pause)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(resume)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(now)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(folders)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__help__folders_commands" \
+"*::: :->folders" \
+&& ret=0
+
+    case $state in
+    (folders)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-help-folders-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(add)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(remove)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(errors)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(quota)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(daemon)
+_arguments "${_arguments_options[@]}" : \
+":: :_gdrivesync__help__daemon_commands" \
+"*::: :->daemon" \
+&& ret=0
+
+    case $state in
+    (daemon)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:gdrivesync-help-daemon-command-$line[1]:"
+        case $line[1] in
+            (start)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(stop)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(status)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(completions)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_gdrivesync_commands] )) ||
+_gdrivesync_commands() {
+    local commands; commands=(
+'status:Per-account status, quota, last sync (requires running daemon)' \
+'accounts:' \
+'sync:' \
+'folders:' \
+'errors:Recent sync errors from daemon DB' \
+'quota:Drive storage quota per account' \
+'daemon:' \
+'completions:Print shell completions (bash, zsh, fish)' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts_commands] )) ||
+_gdrivesync__accounts_commands() {
+    local commands; commands=(
+'list:List configured accounts' \
+'add:Run OAuth via daemon (browser opens); blocks until done' \
+'remove:Remove account and revoke token. Asks for confirmation unless --yes' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync accounts commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts__add_commands] )) ||
+_gdrivesync__accounts__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync accounts add commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts__help_commands] )) ||
+_gdrivesync__accounts__help_commands() {
+    local commands; commands=(
+'list:List configured accounts' \
+'add:Run OAuth via daemon (browser opens); blocks until done' \
+'remove:Remove account and revoke token. Asks for confirmation unless --yes' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync accounts help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts__help__add_commands] )) ||
+_gdrivesync__accounts__help__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync accounts help add commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts__help__help_commands] )) ||
+_gdrivesync__accounts__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync accounts help help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts__help__list_commands] )) ||
+_gdrivesync__accounts__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync accounts help list commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts__help__remove_commands] )) ||
+_gdrivesync__accounts__help__remove_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync accounts help remove commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts__list_commands] )) ||
+_gdrivesync__accounts__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync accounts list commands' commands "$@"
+}
+(( $+functions[_gdrivesync__accounts__remove_commands] )) ||
+_gdrivesync__accounts__remove_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync accounts remove commands' commands "$@"
+}
+(( $+functions[_gdrivesync__completions_commands] )) ||
+_gdrivesync__completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync completions commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon_commands] )) ||
+_gdrivesync__daemon_commands() {
+    local commands; commands=(
+'start:Start daemon (systemd --user if available, else spawn gds-daemon)' \
+'stop:Stop daemon (SIGTERM to PID file or systemctl)' \
+'status:Show whether daemon is on D-Bus and PID file' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync daemon commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon__help_commands] )) ||
+_gdrivesync__daemon__help_commands() {
+    local commands; commands=(
+'start:Start daemon (systemd --user if available, else spawn gds-daemon)' \
+'stop:Stop daemon (SIGTERM to PID file or systemctl)' \
+'status:Show whether daemon is on D-Bus and PID file' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync daemon help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon__help__help_commands] )) ||
+_gdrivesync__daemon__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync daemon help help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon__help__start_commands] )) ||
+_gdrivesync__daemon__help__start_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync daemon help start commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon__help__status_commands] )) ||
+_gdrivesync__daemon__help__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync daemon help status commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon__help__stop_commands] )) ||
+_gdrivesync__daemon__help__stop_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync daemon help stop commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon__start_commands] )) ||
+_gdrivesync__daemon__start_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync daemon start commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon__status_commands] )) ||
+_gdrivesync__daemon__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync daemon status commands' commands "$@"
+}
+(( $+functions[_gdrivesync__daemon__stop_commands] )) ||
+_gdrivesync__daemon__stop_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync daemon stop commands' commands "$@"
+}
+(( $+functions[_gdrivesync__errors_commands] )) ||
+_gdrivesync__errors_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync errors commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders_commands] )) ||
+_gdrivesync__folders_commands() {
+    local commands; commands=(
+'list:List sync folder mappings' \
+'add:Add mapping (uses first account; see daemon docs)' \
+'remove:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync folders commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders__add_commands] )) ||
+_gdrivesync__folders__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync folders add commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders__help_commands] )) ||
+_gdrivesync__folders__help_commands() {
+    local commands; commands=(
+'list:List sync folder mappings' \
+'add:Add mapping (uses first account; see daemon docs)' \
+'remove:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync folders help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders__help__add_commands] )) ||
+_gdrivesync__folders__help__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync folders help add commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders__help__help_commands] )) ||
+_gdrivesync__folders__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync folders help help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders__help__list_commands] )) ||
+_gdrivesync__folders__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync folders help list commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders__help__remove_commands] )) ||
+_gdrivesync__folders__help__remove_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync folders help remove commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders__list_commands] )) ||
+_gdrivesync__folders__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync folders list commands' commands "$@"
+}
+(( $+functions[_gdrivesync__folders__remove_commands] )) ||
+_gdrivesync__folders__remove_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync folders remove commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help_commands] )) ||
+_gdrivesync__help_commands() {
+    local commands; commands=(
+'status:Per-account status, quota, last sync (requires running daemon)' \
+'accounts:' \
+'sync:' \
+'folders:' \
+'errors:Recent sync errors from daemon DB' \
+'quota:Drive storage quota per account' \
+'daemon:' \
+'completions:Print shell completions (bash, zsh, fish)' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__accounts_commands] )) ||
+_gdrivesync__help__accounts_commands() {
+    local commands; commands=(
+'list:List configured accounts' \
+'add:Run OAuth via daemon (browser opens); blocks until done' \
+'remove:Remove account and revoke token. Asks for confirmation unless --yes' \
+    )
+    _describe -t commands 'gdrivesync help accounts commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__accounts__add_commands] )) ||
+_gdrivesync__help__accounts__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help accounts add commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__accounts__list_commands] )) ||
+_gdrivesync__help__accounts__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help accounts list commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__accounts__remove_commands] )) ||
+_gdrivesync__help__accounts__remove_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help accounts remove commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__completions_commands] )) ||
+_gdrivesync__help__completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help completions commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__daemon_commands] )) ||
+_gdrivesync__help__daemon_commands() {
+    local commands; commands=(
+'start:Start daemon (systemd --user if available, else spawn gds-daemon)' \
+'stop:Stop daemon (SIGTERM to PID file or systemctl)' \
+'status:Show whether daemon is on D-Bus and PID file' \
+    )
+    _describe -t commands 'gdrivesync help daemon commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__daemon__start_commands] )) ||
+_gdrivesync__help__daemon__start_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help daemon start commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__daemon__status_commands] )) ||
+_gdrivesync__help__daemon__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help daemon status commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__daemon__stop_commands] )) ||
+_gdrivesync__help__daemon__stop_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help daemon stop commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__errors_commands] )) ||
+_gdrivesync__help__errors_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help errors commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__folders_commands] )) ||
+_gdrivesync__help__folders_commands() {
+    local commands; commands=(
+'list:List sync folder mappings' \
+'add:Add mapping (uses first account; see daemon docs)' \
+'remove:' \
+    )
+    _describe -t commands 'gdrivesync help folders commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__folders__add_commands] )) ||
+_gdrivesync__help__folders__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help folders add commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__folders__list_commands] )) ||
+_gdrivesync__help__folders__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help folders list commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__folders__remove_commands] )) ||
+_gdrivesync__help__folders__remove_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help folders remove commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__help_commands] )) ||
+_gdrivesync__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__quota_commands] )) ||
+_gdrivesync__help__quota_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help quota commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__status_commands] )) ||
+_gdrivesync__help__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help status commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__sync_commands] )) ||
+_gdrivesync__help__sync_commands() {
+    local commands; commands=(
+'pause:Pause all sync folders' \
+'resume:Resume sync' \
+'now:Queue immediate sync (optional path = restrict to folder under path)' \
+    )
+    _describe -t commands 'gdrivesync help sync commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__sync__now_commands] )) ||
+_gdrivesync__help__sync__now_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help sync now commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__sync__pause_commands] )) ||
+_gdrivesync__help__sync__pause_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help sync pause commands' commands "$@"
+}
+(( $+functions[_gdrivesync__help__sync__resume_commands] )) ||
+_gdrivesync__help__sync__resume_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync help sync resume commands' commands "$@"
+}
+(( $+functions[_gdrivesync__quota_commands] )) ||
+_gdrivesync__quota_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync quota commands' commands "$@"
+}
+(( $+functions[_gdrivesync__status_commands] )) ||
+_gdrivesync__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync status commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync_commands] )) ||
+_gdrivesync__sync_commands() {
+    local commands; commands=(
+'pause:Pause all sync folders' \
+'resume:Resume sync' \
+'now:Queue immediate sync (optional path = restrict to folder under path)' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync sync commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync__help_commands] )) ||
+_gdrivesync__sync__help_commands() {
+    local commands; commands=(
+'pause:Pause all sync folders' \
+'resume:Resume sync' \
+'now:Queue immediate sync (optional path = restrict to folder under path)' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'gdrivesync sync help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync__help__help_commands] )) ||
+_gdrivesync__sync__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync sync help help commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync__help__now_commands] )) ||
+_gdrivesync__sync__help__now_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync sync help now commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync__help__pause_commands] )) ||
+_gdrivesync__sync__help__pause_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync sync help pause commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync__help__resume_commands] )) ||
+_gdrivesync__sync__help__resume_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync sync help resume commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync__now_commands] )) ||
+_gdrivesync__sync__now_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync sync now commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync__pause_commands] )) ||
+_gdrivesync__sync__pause_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync sync pause commands' commands "$@"
+}
+(( $+functions[_gdrivesync__sync__resume_commands] )) ||
+_gdrivesync__sync__resume_commands() {
+    local commands; commands=()
+    _describe -t commands 'gdrivesync sync resume commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_gdrivesync" ]; then
+    _gdrivesync "$@"
+else
+    compdef _gdrivesync gdrivesync
+fi
