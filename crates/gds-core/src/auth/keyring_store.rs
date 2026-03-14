@@ -31,12 +31,20 @@ impl TokenStore for KeyringTokenStore {
                 message: e.to_string(),
             })?;
         entry.get_password().map(Some).or_else(|e| {
-            if e.to_string().contains("No such") || e.to_string().contains("not found") {
+            let msg = e.to_string();
+            if msg.contains("No such")
+                || msg.contains("not found")
+                || msg.contains("No matching entry")
+                || msg.contains("secure storage")
+            {
                 Ok(None)
             } else {
-                Err(SyncError::AuthError {
-                    message: e.to_string(),
-                })
+                tracing::debug!(
+                    key = %key,
+                    error = %msg,
+                    "keyring get_password failed (e.g. keyring locked or unavailable)"
+                );
+                Err(SyncError::AuthError { message: msg })
             }
         })
     }
@@ -48,5 +56,16 @@ impl TokenStore for KeyringTokenStore {
             })?;
         let _ = entry.delete_credential(); // idempotent: ignore if already missing
         Ok(())
+    }
+
+    fn get_oauth_client_secret(&self) -> Result<Option<String>, SyncError> {
+        self.get_refresh_token(crate::auth::token_store::OAUTH_CLIENT_SECRET_KEY)
+    }
+
+    fn set_oauth_client_secret(&self, secret: &str) -> Result<(), SyncError> {
+        self.store_refresh_token(
+            crate::auth::token_store::OAUTH_CLIENT_SECRET_KEY,
+            secret,
+        )
     }
 }
