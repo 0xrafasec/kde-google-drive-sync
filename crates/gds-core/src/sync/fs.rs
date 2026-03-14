@@ -151,7 +151,7 @@ impl LocalFs for TokioLocalFs {
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_err(|e| SyncError::IoError {
                     path: path.display().to_string(),
-                    source: std::io::Error::new(std::io::ErrorKind::Other, e),
+                    source: std::io::Error::other(e),
                 })?;
             let modified_dt = DateTime::from_timestamp(modified.as_secs() as i64, modified.subsec_nanos())
                 .unwrap_or_else(Utc::now);
@@ -184,7 +184,7 @@ impl LocalFs for TokioLocalFs {
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|e| SyncError::IoError {
                 path: path.display().to_string(),
-                source: std::io::Error::new(std::io::ErrorKind::Other, e),
+                source: std::io::Error::other(e),
             })?;
         let modified_dt = DateTime::from_timestamp(modified.as_secs() as i64, modified.subsec_nanos()).unwrap_or_else(Utc::now);
         let content = tokio::fs::read(&path).await.map_err(|e| SyncError::IoError {
