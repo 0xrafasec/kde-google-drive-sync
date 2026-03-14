@@ -7,9 +7,22 @@ license.workspace = true
 description = "Background sync daemon (systemd user unit)"
 
 [dependencies]
-gds-core = { path = "../gds-core" }
+gds-core = { path = "../gds-core", features = ["keyring"] }
 anyhow = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tokio = { version = "1", features = ["full"] }
 clap = { version = "4", features = ["derive"] }
+notify = "8.2"
+notify-debouncer-mini = "0.7"
+zbus = { version = "5", features = ["tokio"] }
+uuid = "1"
+nix = { version = "0.31", features = ["signal"] }
+toml = "0.9.8"
+serde = { version = "1", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
+dirs = "6"
+
+[dev-dependencies]
+tempfile = "3"
