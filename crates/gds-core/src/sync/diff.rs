@@ -145,7 +145,7 @@ impl DiffEngine {
             } else {
                 let parent_path = parent_id
                     .and_then(|pid| drive_id_to_path.get(pid).cloned())
-                    .unwrap_or_else(|| String::new());
+                    .unwrap_or_else(String::new);
                 if parent_path.is_empty() && parent_id != Some(drive_folder_id.as_str()) {
                     continue;
                 }
