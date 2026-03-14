@@ -85,6 +85,36 @@ impl FileStateRepository {
             .map_err(|e| sqlx::Error::Decode(Box::new(e)))
     }
 
+    /// Get file state by sync folder and drive file id.
+    pub async fn get_by_drive_id(
+        pool: &SqlitePool,
+        sync_folder_id: &str,
+        drive_file_id: &str,
+    ) -> Result<Option<FileState>, sqlx::Error> {
+        let row = sqlx::query_as::<_, (
+            String,
+            String,
+            String,
+            Option<String>,
+            Option<String>,
+            Option<i64>,
+            Option<String>,
+            Option<i64>,
+            String,
+            Option<i64>,
+        )>(
+            "SELECT id, sync_folder_id, relative_path, drive_file_id, drive_md5, drive_modified, local_md5, local_modified, sync_state, last_synced_at FROM file_states WHERE sync_folder_id = ? AND drive_file_id = ?",
+        )
+        .bind(sync_folder_id)
+        .bind(drive_file_id)
+        .fetch_optional(pool)
+        .await?;
+
+        row.map(|r| row_to_file_state(r))
+            .transpose()
+            .map_err(|e| sqlx::Error::Decode(Box::new(e)))
+    }
+
     /// List file states for a sync folder.
     pub async fn list_by_folder(
         pool: &SqlitePool,
