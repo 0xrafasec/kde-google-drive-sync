@@ -113,65 +113,65 @@ Foundation. Everything else depends on this being solid.
 
 ### 2.1 File Watcher (`gds-daemon::watcher`)
 
-- [ ] `FileWatcher` using `notify` crate (inotify backend on Linux)
-- [ ] Recursive watch on all configured sync folders
-- [ ] Watch new subdirectories as they are created (dynamic watch add)
-- [ ] Event debouncing: 500ms window to coalesce rapid writes (e.g., editor save)
-- [ ] Ignore patterns: `.gds_tmp`, `.git/`, common editor temp files (`*.swp`, `~*`, `.#*`)
-- [ ] Ignore own writes: don't re-trigger sync on files written by the daemon itself
-- [ ] Watcher recovery: re-establish watches after `IN_MOVE_SELF` or watch fd invalidation
-- [ ] Unit test: debounce logic (rapid events → single notification)
-- [ ] Unit test: ignore pattern matching
-- [ ] Integration test: watcher detects create, modify, delete, move events
+- [x] `FileWatcher` using `notify` crate (inotify backend on Linux)
+- [x] Recursive watch on all configured sync folders
+- [x] Watch new subdirectories as they are created (dynamic watch add)
+- [x] Event debouncing: 500ms window to coalesce rapid writes (e.g., editor save)
+- [x] Ignore patterns: `.gds_tmp`, `.git/`, common editor temp files (`*.swp`, `~*`, `.#*`)
+- [x] Ignore own writes: don't re-trigger sync on files written by the daemon itself
+- [x] Watcher recovery: re-establish watches after `IN_MOVE_SELF` or watch fd invalidation
+- [x] Unit test: debounce logic (rapid events → single notification)
+- [x] Unit test: ignore pattern matching
+- [x] Integration test: watcher detects create, modify, delete, move events
 
 ### 2.2 D-Bus Service (`gds-daemon::dbus`)
 
-- [ ] Register `org.kde.GDriveSync` on session bus using zbus
-- [ ] Implement `GetStatus() → (status: String, syncing_count: u32)` — fully accurate
-- [ ] Implement `PauseSync()` — pauses all sync queues, persists state to DB
-- [ ] Implement `ResumeSync()` — resumes all queues
-- [ ] Implement `ForceSync(path: String)` — immediate sync of specific path
-- [ ] Implement `GetAccounts() → Array<AccountInfo>` — live data from DB
-- [ ] Implement `AddAccount()` — triggers full OAuth flow, blocks until complete or error
-- [ ] Implement `RemoveAccount(id: String)` — stops sync, deletes DB records, revokes token, removes keyring entry
-- [ ] Implement `GetSyncFolders() → Array<SyncFolder>`
-- [ ] Implement `AddSyncFolder(local_path, drive_folder_id)` — validates paths, starts initial sync
-- [ ] Implement `RemoveSyncFolder(id)` — stops sync for folder, removes DB records (does NOT delete local files)
-- [ ] Implement `GetSyncErrors() → Array<SyncErrorInfo>` — recent errors per account
-- [ ] Implement `GetAboutInfo(account_id) → QuotaInfo` — Drive quota from API
-- [ ] Emit `SyncStarted(account_id, path)` signal
-- [ ] Emit `SyncCompleted(account_id, path, files_synced)` signal
-- [ ] Emit `SyncError(account_id, path, error)` signal
-- [ ] Emit `ConflictDetected(local_path, conflict_copy)` signal
-- [ ] Emit `StatusChanged(new_status)` signal
-- [ ] D-Bus introspection XML generated and shipped as asset
-- [ ] Integration test: call every method via zbus test client
+- [x] Register `org.kde.GDriveSync` on session bus using zbus
+- [x] Implement `GetStatus() → (status: String, syncing_count: u32)` — fully accurate
+- [x] Implement `PauseSync()` — pauses all sync queues, persists state to DB
+- [x] Implement `ResumeSync()` — resumes all queues
+- [x] Implement `ForceSync(path: String)` — immediate sync of specific path
+- [x] Implement `GetAccounts() → Array<AccountInfo>` — live data from DB
+- [x] Implement `AddAccount()` — triggers full OAuth flow, blocks until complete or error
+- [x] Implement `RemoveAccount(id: String)` — stops sync, deletes DB records, revokes token, removes keyring entry
+- [x] Implement `GetSyncFolders() → Array<SyncFolder>`
+- [x] Implement `AddSyncFolder(local_path, drive_folder_id)` — validates paths, starts initial sync
+- [x] Implement `RemoveSyncFolder(id)` — stops sync for folder, removes DB records (does NOT delete local files)
+- [x] Implement `GetSyncErrors() → Array<SyncErrorInfo>` — recent errors per account
+- [x] Implement `GetAboutInfo(account_id) → QuotaInfo` — Drive quota from API
+- [x] Emit `SyncStarted(account_id, path)` signal
+- [x] Emit `SyncCompleted(account_id, path, files_synced)` signal
+- [x] Emit `SyncError(account_id, path, error)` signal
+- [x] Emit `ConflictDetected(local_path, conflict_copy)` signal
+- [x] Emit `StatusChanged(new_status)` signal
+- [x] D-Bus introspection XML generated and shipped as asset
+- [x] Integration test: call every method via zbus test client
 
 ### 2.3 Scheduler (`gds-daemon::scheduler`)
 
-- [ ] Poll scheduler: run `changes.list` per account on configurable interval (default 30s)
-- [ ] Event-driven trigger: file watcher events immediately queue a sync
-- [ ] Rate limiter: max N sync operations per second (token bucket)
-- [ ] Upload queue: max 2 concurrent uploads (configurable)
-- [ ] Download queue: max 4 concurrent downloads (configurable)
-- [ ] Retry queue: failed operations re-queued with exponential backoff
-- [ ] Backoff state persisted to DB (survives daemon restart)
-- [ ] Graceful shutdown: finish in-flight operations, flush DB, deregister D-Bus
-- [ ] Unit test: token bucket rate limiter correctness
-- [ ] Unit test: retry queue backoff timing
+- [x] Poll scheduler: run `changes.list` per account on configurable interval (default 30s)
+- [x] Event-driven trigger: file watcher events immediately queue a sync
+- [x] Rate limiter: max N sync operations per second (token bucket)
+- [x] Upload queue: max 2 concurrent uploads (configurable)
+- [x] Download queue: max 4 concurrent downloads (configurable)
+- [x] Retry queue: failed operations re-queued with exponential backoff
+- [x] Backoff state persisted to DB (survives daemon restart)
+- [x] Graceful shutdown: finish in-flight operations, flush DB, deregister D-Bus
+- [x] Unit test: token bucket rate limiter correctness
+- [x] Unit test: retry queue backoff timing
 
 ### 2.4 Daemon Bootstrap
 
-- [ ] `main.rs`: parse CLI args (config path override, log level, foreground flag)
-- [ ] Load and validate config from `~/.config/gds/config.toml`
-- [ ] Initialize SQLite (run migrations)
-- [ ] Initialize all accounts from DB (re-establish token refresh for each)
-- [ ] Register D-Bus service (fail fast if already registered — single instance enforcement)
-- [ ] Initialize file watchers for all active sync folders
-- [ ] Start scheduler
-- [ ] Handle SIGTERM/SIGINT for graceful shutdown
-- [ ] Write PID file to `~/.local/share/gds/daemon.pid`
-- [ ] systemd user unit file: `packaging/systemd/gds-daemon.service`
+- [x] `main.rs`: parse CLI args (config path override, log level, foreground flag)
+- [x] Load and validate config from `~/.config/gds/config.toml`
+- [x] Initialize SQLite (run migrations)
+- [x] Initialize all accounts from DB (re-establish token refresh for each)
+- [x] Register D-Bus service (fail fast if already registered — single instance enforcement)
+- [x] Initialize file watchers for all active sync folders
+- [x] Start scheduler
+- [x] Handle SIGTERM/SIGINT for graceful shutdown
+- [x] Write PID file to `~/.local/share/gds/daemon.pid`
+- [x] systemd user unit file: `packaging/systemd/gds-daemon.service`
 
 ---
 
