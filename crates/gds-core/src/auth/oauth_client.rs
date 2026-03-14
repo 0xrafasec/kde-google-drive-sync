@@ -19,9 +19,10 @@ const AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
 const REVOKE_URL: &str = "https://oauth2.googleapis.com/revoke";
 
-/// Required scopes for Drive sync and user email.
+/// Required scopes for Drive sync and user email/name.
 pub const SCOPE_DRIVE: &str = "https://www.googleapis.com/auth/drive";
 pub const SCOPE_EMAIL: &str = "https://www.googleapis.com/auth/userinfo.email";
+pub const SCOPE_PROFILE: &str = "https://www.googleapis.com/auth/userinfo.profile";
 
 /// Builds a Google OAuth2 client with PKCE (no client secret required for public flow,
 /// but Google desktop apps typically use client secret for token exchange).
@@ -81,6 +82,7 @@ pub fn authorization_url(client: &ConfiguredBasicClient) -> Result<AuthUrlResult
         .authorize_url(CsrfToken::new_random)
         .add_scope(Scope::new(SCOPE_DRIVE.to_string()))
         .add_scope(Scope::new(SCOPE_EMAIL.to_string()))
+        .add_scope(Scope::new(SCOPE_PROFILE.to_string()))
         .set_pkce_challenge(pkce_challenge)
         .url();
     Ok(AuthUrlResult {
@@ -171,6 +173,42 @@ pub async fn refresh_access_token(
 pub struct RefreshResult {
     pub access_token: String,
     pub expires_in: Duration,
+}
+
+/// Fetches email and name from Google OAuth2 userinfo v2 (fallback when Drive about.get has no user).
+pub async fn fetch_google_userinfo(
+    access_token: &str,
+) -> Result<(String, Option<String>), SyncError> {
+    #[derive(serde::Deserialize)]
+    struct Userinfo {
+        email: Option<String>,
+        name: Option<String>,
+    }
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(15))
+        .build()
+        .map_err(|e| SyncError::AuthError {
+            message: e.to_string(),
+        })?;
+    let res = client
+        .get("https://www.googleapis.com/oauth2/v2/userinfo")
+        .header("Authorization", format!("Bearer {}", access_token))
+        .send()
+        .await
+        .map_err(|e| SyncError::AuthError {
+            message: e.to_string(),
+        })?;
+    if !res.status().is_success() {
+        return Err(SyncError::AuthError {
+            message: format!("userinfo returned {}", res.status()),
+        });
+    }
+    let info: Userinfo = res.json().await.map_err(|e| SyncError::AuthError {
+        message: e.to_string(),
+    })?;
+    let email = info.email.unwrap_or_else(String::new);
+    let name = info.name.filter(|s| !s.is_empty());
+    Ok((email, name))
 }
 
 /// Revokes the refresh token at Google (call on account removal).
