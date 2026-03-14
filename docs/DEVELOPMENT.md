@@ -92,7 +92,7 @@ zbus = { version = "4", features = ["tokio"] }
 sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio", "macros", "migrate"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-thiserror = "1"
+thiserror = "2"
 anyhow = "1"
 keyring = { version = "3", features = ["linux-secret-service-rt-tokio-crypto-openssl"] }
 secrecy = { version = "0.8", features = ["serde"] }
