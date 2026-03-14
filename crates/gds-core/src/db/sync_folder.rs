@@ -50,7 +50,15 @@ impl SyncFolderRepository {
         .await?;
 
         Ok(row.map(
-            |(id, account_id, local_path, drive_folder_id, start_page_token, last_sync_at, paused)| {
+            |(
+                id,
+                account_id,
+                local_path,
+                drive_folder_id,
+                start_page_token,
+                last_sync_at,
+                paused,
+            )| {
                 SyncFolder {
                     id,
                     account_id,
@@ -87,7 +95,15 @@ impl SyncFolderRepository {
         Ok(rows
             .into_iter()
             .map(
-                |(id, account_id, local_path, drive_folder_id, start_page_token, last_sync_at, paused)| {
+                |(
+                    id,
+                    account_id,
+                    local_path,
+                    drive_folder_id,
+                    start_page_token,
+                    last_sync_at,
+                    paused,
+                )| {
                     SyncFolder {
                         id,
                         account_id,
