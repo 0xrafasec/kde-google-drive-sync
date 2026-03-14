@@ -84,28 +84,28 @@ Foundation. Everything else depends on this being solid.
 
 ### 1.5 Sync Engine (`gds-core::sync`)
 
-- [ ] `DiffEngine` — compare local filesystem state vs. SQLite known state vs. Drive changes
-- [ ] `DiffEngine::compute_local_changes` — walk local dir, compute MD5, compare to DB
-- [ ] `DiffEngine::compute_remote_changes` — process Drive changeset, compare to DB
-- [ ] Change classification: new upload, new download, update upload, update download, delete local, delete remote, conflict
-- [ ] Conflict detection: both local and remote changed since last sync
-- [ ] Conflict resolution: server wins + local copy saved as `.conflict-YYYYMMDD-HHMMSS`
-- [ ] Conflict copy naming: collision-safe (append `-2`, `-3` if conflict copy already exists)
-- [ ] `SyncQueue` — priority queue for pending sync operations (downloads before uploads for initial sync)
-- [ ] `SyncExecutor` — runs queued operations with concurrency limit (N uploads, M downloads)
-- [ ] Atomic download: write to temp file, fsync, atomic rename
-- [ ] Path validation: `safe_local_path()` prevents traversal attacks (see SECURITY.md)
-- [ ] Symlink policy: skip external symlinks during upload scan, never create symlinks on download
-- [ ] Google Workspace stub files: create `.gdoc`, `.gsheet`, `.gslides` shortcut files (contain URL)
-- [ ] Binary file deduplication: skip upload if local MD5 matches last known server MD5
-- [ ] Large directory handling: streaming walk, not load-all-into-memory
-- [ ] Initial sync: full recursive scan + reconcile (must handle 100k+ files without OOM)
-- [ ] Incremental sync: changes.list-based, efficient (only process delta)
-- [ ] Pause/resume: `SyncExecutor` checks pause flag between operations
-- [ ] Unit tests: DiffEngine with all change type combinations
-- [ ] Unit tests: conflict detection matrix (local changed / remote changed / both / neither)
-- [ ] Unit tests: path validation with adversarial inputs (`../../../etc/passwd`, absolute paths, null bytes)
-- [ ] Integration test: full sync cycle (upload + download + conflict) against mock Drive API
+- [x] `DiffEngine` — compare local filesystem state vs. SQLite known state vs. Drive changes
+- [x] `DiffEngine::compute_local_changes` — walk local dir, compute MD5, compare to DB
+- [x] `DiffEngine::compute_remote_changes` — process Drive changeset, compare to DB
+- [x] Change classification: new upload, new download, update upload, update download, delete local, delete remote, conflict
+- [x] Conflict detection: both local and remote changed since last sync
+- [x] Conflict resolution: server wins + local copy saved as `.conflict-YYYYMMDD-HHMMSS`
+- [x] Conflict copy naming: collision-safe (append `-2`, `-3` if conflict copy already exists)
+- [x] `SyncQueue` — priority queue for pending sync operations (downloads before uploads for initial sync)
+- [x] `SyncExecutor` — runs queued operations with concurrency limit (N uploads, M downloads)
+- [x] Atomic download: write to temp file, fsync, atomic rename
+- [x] Path validation: `safe_local_path()` prevents traversal attacks (see SECURITY.md)
+- [x] Symlink policy: skip external symlinks during upload scan, never create symlinks on download
+- [x] Google Workspace stub files: create `.gdoc`, `.gsheet`, `.gslides` shortcut files (contain URL)
+- [x] Binary file deduplication: skip upload if local MD5 matches last known server MD5
+- [x] Large directory handling: streaming walk, not load-all-into-memory
+- [x] Initial sync: full recursive scan + reconcile (must handle 100k+ files without OOM)
+- [x] Incremental sync: changes.list-based, efficient (only process delta)
+- [x] Pause/resume: `SyncExecutor` checks pause flag between operations
+- [x] Unit tests: DiffEngine with all change type combinations
+- [x] Unit tests: conflict detection matrix (local changed / remote changed / both / neither)
+- [x] Unit tests: path validation with adversarial inputs (`../../../etc/passwd`, absolute paths, null bytes)
+- [x] Integration test: full sync cycle (upload + download + conflict) against mock Drive API
 
 ---
 
