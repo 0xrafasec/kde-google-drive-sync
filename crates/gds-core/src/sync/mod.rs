@@ -8,7 +8,7 @@ mod path;
 mod queue;
 mod workspace_stub;
 
-pub use change::{SyncAction, SyncActionKind};
+pub use change::{is_conflict, SyncAction, SyncActionKind};
 pub use diff::{parse_drive_modified, DiffEngine};
 pub use executor::SyncExecutor;
 pub use fs::{DirEntry, LocalFileMeta, LocalFs, TokioLocalFs};
