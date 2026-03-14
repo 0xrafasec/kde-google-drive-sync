@@ -8,16 +8,18 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use crate::db::FileStateRepository;
+use crate::model::SyncError;
 use crate::model::{ChangeSet, FileState, SyncFolder};
 use crate::sync::change::{SyncAction, SyncActionKind};
-use crate::sync::path::safe_local_path;
 use crate::sync::fs::LocalFs;
-use crate::model::SyncError;
+use crate::sync::path::safe_local_path;
 
 /// Parses Drive API modifiedTime (RFC3339) to DateTime<Utc>.
 pub fn parse_drive_modified(s: Option<&str>) -> Option<DateTime<Utc>> {
     let s = s?;
-    DateTime::parse_from_rfc3339(s).ok().map(|dt| dt.with_timezone(&Utc))
+    DateTime::parse_from_rfc3339(s)
+        .ok()
+        .map(|dt| dt.with_timezone(&Utc))
 }
 
 /// Diff engine: computes local and remote changes, classifies actions.
@@ -36,9 +38,13 @@ impl DiffEngine {
         let sync_folder_id = &sync_folder.id;
         let mut actions = Vec::new();
         let mut dir_queue: Vec<String> = vec![String::new()];
-        let db_states = FileStateRepository::list_by_folder(pool, sync_folder_id).await
+        let db_states = FileStateRepository::list_by_folder(pool, sync_folder_id)
+            .await
             .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
-        let by_path: HashMap<String, FileState> = db_states.into_iter().map(|s| (s.relative_path.clone(), s)).collect();
+        let by_path: HashMap<String, FileState> = db_states
+            .into_iter()
+            .map(|s| (s.relative_path.clone(), s))
+            .collect();
 
         while let Some(rel_dir) = dir_queue.pop() {
             let entries = local_fs.list_dir(sync_root, &rel_dir).await?;
@@ -73,7 +79,10 @@ impl DiffEngine {
                 let state = by_path.get(&relative_path);
                 if let Some(state) = state {
                     let local_changed = state.local_md5.as_deref() != Some(&meta.md5)
-                        || state.local_modified.map(|t| t != meta.modified).unwrap_or(true);
+                        || state
+                            .local_modified
+                            .map(|t| t != meta.modified)
+                            .unwrap_or(true);
                     if local_changed {
                         actions.push(SyncAction::update_upload(
                             relative_path,
@@ -99,7 +108,10 @@ impl DiffEngine {
             }
             let exists = local_fs.exists(sync_root, relative_path).await?;
             if !exists {
-                actions.push(SyncAction::delete_remote(relative_path.clone(), state.clone()));
+                actions.push(SyncAction::delete_remote(
+                    relative_path.clone(),
+                    state.clone(),
+                ));
             }
         }
 
@@ -115,21 +127,28 @@ impl DiffEngine {
     ) -> Result<Vec<SyncAction>, SyncError> {
         let sync_folder_id = &sync_folder.id;
         let drive_folder_id = &sync_folder.drive_folder_id;
-        let db_states = FileStateRepository::list_by_folder(pool, sync_folder_id).await
+        let db_states = FileStateRepository::list_by_folder(pool, sync_folder_id)
+            .await
             .map_err(|e| SyncError::DatabaseError(Box::new(e)))?;
         let by_drive_id: HashMap<String, FileState> = db_states
             .iter()
             .filter_map(|s| s.drive_file_id.as_ref().map(|id| (id.clone(), s.clone())))
             .collect();
 
-        let mut drive_id_to_path: HashMap<String, String> = by_drive_id.iter().map(|(id, s)| (id.clone(), s.relative_path.clone())).collect();
+        let mut drive_id_to_path: HashMap<String, String> = by_drive_id
+            .iter()
+            .map(|(id, s)| (id.clone(), s.relative_path.clone()))
+            .collect();
 
         let mut actions = Vec::new();
         for change in &change_set.changes {
             let file_id = &change.file_id;
             if change.removed == Some(true) {
                 if let Some(state) = by_drive_id.get(file_id) {
-                    actions.push(SyncAction::delete_local(state.relative_path.clone(), state.clone()));
+                    actions.push(SyncAction::delete_local(
+                        state.relative_path.clone(),
+                        state.clone(),
+                    ));
                 }
                 continue;
             }
@@ -139,7 +158,11 @@ impl DiffEngine {
                 _ => continue,
             };
 
-            let parent_id = drive_file.parents.as_deref().and_then(|p| p.first()).map(String::as_str);
+            let parent_id = drive_file
+                .parents
+                .as_deref()
+                .and_then(|p| p.first())
+                .map(String::as_str);
             let relative_path = if let Some(state) = by_drive_id.get(file_id) {
                 state.relative_path.clone()
             } else {
@@ -161,7 +184,8 @@ impl DiffEngine {
             let drive_md5 = drive_file.md5_checksum.as_deref();
             let drive_modified = parse_drive_modified(drive_file.modified_time.as_deref());
 
-            let state = FileStateRepository::get_by_path(pool, sync_folder_id, &relative_path).await
+            let state = FileStateRepository::get_by_path(pool, sync_folder_id, &relative_path)
+                .await
                 .map_err(|e| SyncError::DatabaseError(Box::new(e)))?
                 .or_else(|| by_drive_id.get(file_id).cloned());
 
@@ -173,7 +197,11 @@ impl DiffEngine {
                     continue;
                 }
 
-                actions.push(SyncAction::update_download(relative_path, state, drive_file));
+                actions.push(SyncAction::update_download(
+                    relative_path,
+                    state,
+                    drive_file,
+                ));
             } else {
                 actions.push(SyncAction::new_download(relative_path, drive_file));
             }
@@ -196,7 +224,12 @@ impl DiffEngine {
             if let Some(local) = by_path.remove(&path) {
                 match (&local.kind, &a.kind) {
                     (SyncActionKind::UpdateUpload, SyncActionKind::UpdateDownload) => {
-                        if let (Some(state), Some(drive_file), Some(local_md5), Some(local_modified)) = (
+                        if let (
+                            Some(state),
+                            Some(drive_file),
+                            Some(local_md5),
+                            Some(local_modified),
+                        ) = (
                             local.state.clone(),
                             a.drive_file.clone(),
                             local.local_md5.clone(),
