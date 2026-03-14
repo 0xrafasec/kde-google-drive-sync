@@ -317,10 +317,7 @@ impl DaemonService {
     ) -> zbus::Result<()>;
 
     #[zbus(signal)]
-    async fn status_changed(
-        emitter: &SignalEmitter<'_>,
-        new_status: &str,
-    ) -> zbus::Result<()>;
+    async fn status_changed(emitter: &SignalEmitter<'_>, new_status: &str) -> zbus::Result<()>;
 }
 
 async fn list_all_folders(pool: &SqlitePool) -> Result<Vec<SyncFolder>, sqlx::Error> {
