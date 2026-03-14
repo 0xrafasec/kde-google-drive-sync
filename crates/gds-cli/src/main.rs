@@ -1,6 +1,27 @@
-//! gdrivesync CLI — communicates with daemon via D-Bus.
+//! Google Drive sync CLI — `gdrivesync`.
 
-fn main() {
-    eprintln!("gdrivesync: not yet implemented");
-    std::process::exit(1);
+use clap::Parser;
+use gds_cli::{run, Cli};
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let cli = Cli::parse();
+
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env().add_directive(if cli.verbose {
+                "info".parse().unwrap()
+            } else {
+                "warn".parse().unwrap()
+            }),
+        )
+        .init();
+
+    match run::run(cli).await {
+        Ok(code) => std::process::exit(code),
+        Err(e) => {
+            eprintln!("error: {:#}", e);
+            std::process::exit(run::EXIT_ERROR);
+        }
+    }
 }
