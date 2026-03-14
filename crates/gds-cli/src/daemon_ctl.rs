@@ -74,6 +74,11 @@ async fn wait_for_bus(timeout: Duration, verbose: bool) -> anyhow::Result<()> {
     anyhow::bail!("daemon did not appear on D-Bus within {:?}", timeout);
 }
 
+/// True if `org.kde.GDriveSync` owns a name on the session bus (daemon is up).
+pub async fn daemon_listening() -> bool {
+    bus_name_has_owner(DEFAULT_SERVICE).await
+}
+
 async fn bus_name_has_owner(name: &str) -> bool {
     let Ok(conn) = zbus::Connection::session().await else {
         return false;
