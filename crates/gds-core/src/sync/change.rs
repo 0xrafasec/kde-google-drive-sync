@@ -38,7 +38,12 @@ pub struct SyncAction {
 }
 
 impl SyncAction {
-    pub fn new_upload(relative_path: String, state: Option<FileState>, local_md5: String, local_modified: DateTime<Utc>) -> Self {
+    pub fn new_upload(
+        relative_path: String,
+        state: Option<FileState>,
+        local_md5: String,
+        local_modified: DateTime<Utc>,
+    ) -> Self {
         Self {
             kind: SyncActionKind::NewUpload,
             relative_path,
@@ -147,9 +152,12 @@ pub fn is_conflict(
     drive_modified: Option<DateTime<Utc>>,
 ) -> bool {
     let local_changed = state.local_md5.as_deref() != Some(local_md5)
-        || state.local_modified.map(|t| t != local_modified).unwrap_or(true);
-    let remote_changed = state.drive_md5.as_deref() != drive_md5
-        || state.drive_modified != drive_modified;
+        || state
+            .local_modified
+            .map(|t| t != local_modified)
+            .unwrap_or(true);
+    let remote_changed =
+        state.drive_md5.as_deref() != drive_md5 || state.drive_modified != drive_modified;
     local_changed && remote_changed
 }
 
@@ -158,7 +166,12 @@ mod tests {
     use super::*;
     use crate::model::SyncState;
 
-    fn state_with(local_md5: Option<&str>, local_mod: Option<DateTime<Utc>>, drive_md5: Option<&str>, drive_mod: Option<DateTime<Utc>>) -> FileState {
+    fn state_with(
+        local_md5: Option<&str>,
+        local_mod: Option<DateTime<Utc>>,
+        drive_md5: Option<&str>,
+        drive_mod: Option<DateTime<Utc>>,
+    ) -> FileState {
         let t = Utc::now();
         FileState {
             id: "id".into(),
