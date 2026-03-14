@@ -26,18 +26,18 @@ Foundation. Everything else depends on this being solid.
 
 ### 1.2 Database Layer (`gds-core::db`)
 
-- [ ] SQLite connection pool setup (sqlx, WAL mode, busy timeout)
-- [ ] Migration system (`sqlx::migrate!` with versioned migration files)
-- [ ] Migration 001: create accounts table
-- [ ] Migration 002: create sync_folders table
-- [ ] Migration 003: create file_states table
-- [ ] Migration 004: create sync_errors table
-- [ ] `AccountRepository` — insert, get_by_id, list_all, delete
-- [ ] `SyncFolderRepository` — insert, get_by_id, list_by_account, delete, set_paused, update_page_token
-- [ ] `FileStateRepository` — upsert, get_by_path, list_by_folder, list_by_state, delete, bulk_upsert
-- [ ] `SyncErrorRepository` — insert, get_recent, clear_for_file, increment_retry
-- [ ] Transaction support for multi-table operations (e.g., account delete cascades)
-- [ ] Integration tests for every repository method (real SQLite in-memory)
+- [x] SQLite connection pool setup (sqlx, WAL mode, busy timeout)
+- [x] Migration system (`sqlx::migrate!` with versioned migration files)
+- [x] Migration 001: create accounts table
+- [x] Migration 002: create sync_folders table
+- [x] Migration 003: create file_states table
+- [x] Migration 004: create sync_errors table
+- [x] `AccountRepository` — insert, get_by_id, list_all, delete
+- [x] `SyncFolderRepository` — insert, get_by_id, list_by_account, delete, set_paused, update_page_token
+- [x] `FileStateRepository` — upsert, get_by_path, list_by_folder, list_by_state, delete, bulk_upsert
+- [x] `SyncErrorRepository` — insert, get_recent, clear_for_file, increment_retry
+- [x] Transaction support for multi-table operations (e.g., account delete cascades)
+- [x] Integration tests for every repository method (real SQLite in-memory)
 
 ### 1.3 Authentication (`gds-core::auth`)
 
