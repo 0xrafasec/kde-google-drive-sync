@@ -37,23 +37,21 @@ mod tests {
         ChangeSet {
             next_page_token: Some("next".to_string()),
             new_start_page_token: None,
-            changes: vec![
-                DriveChange {
-                    change_type: "file".to_string(),
-                    file_id: "f1".to_string(),
-                    file: Some(DriveFile {
-                        id: "f1".to_string(),
-                        name: "a.txt".to_string(),
-                        mime_type: "text/plain".to_string(),
-                        md5_checksum: None,
-                        size: None,
-                        modified_time: None,
-                        parents: None,
-                        trashed: None,
-                    }),
-                    removed: Some(false),
-                },
-            ],
+            changes: vec![DriveChange {
+                change_type: "file".to_string(),
+                file_id: "f1".to_string(),
+                file: Some(DriveFile {
+                    id: "f1".to_string(),
+                    name: "a.txt".to_string(),
+                    mime_type: "text/plain".to_string(),
+                    md5_checksum: None,
+                    size: None,
+                    modified_time: None,
+                    parents: None,
+                    trashed: None,
+                }),
+                removed: Some(false),
+            }],
         }
     }
 
