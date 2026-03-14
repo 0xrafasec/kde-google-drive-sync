@@ -39,6 +39,8 @@ async fn status_json_exits_zero_when_daemon_on_test_bus() {
     let state = Arc::new(DaemonState {
         pool,
         config: config.clone(),
+        resolved_client_id: config.oauth.client_id.clone(),
+        resolved_client_secret: None,
         token_provider,
         token_store: store,
         drive_client,
